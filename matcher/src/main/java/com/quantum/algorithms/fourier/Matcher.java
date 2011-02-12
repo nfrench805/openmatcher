@@ -20,20 +20,30 @@ public class Matcher {
 		int matchingScore = 0;
 
 		Complex[][] Fimage1 = (Complex[][]) FFT.mdfft(image1, true);
-		for (int i = 0; i < 8; i++) {
-			for (int j = 0; j < 8; j++) {
-				logger.info("[" + i + "][" + j + "]=" + Fimage1[i][j].getReal()
-						+ " +i* " + Fimage1[i][j].getImaginary());
-			}
-		}
+		
 		Complex[][] Fimage2 = (Complex[][]) FFT.mdfft(image2, true);
-		for (int i = 0; i < 8; i++) {
-			for (int j = 0; j < 8; j++) {
-				logger.info("[" + i + "][" + j + "]=" + Fimage2[i][j].getReal()
-						+ " +i* " + Fimage2[i][j].getImaginary());
-			}
+		
+		int height = Fimage1[0].length;
+		int width = Fimage1.length;
+		
+		Complex[][] result = new Complex[width][height];
+		
+		for(int j=0;j<height;j++){
+			for (int i = 0;i<width;i++){
+				result[i][j]= Fimage1[i][j].multiply(Fimage2[i][j]);
+			}		
 		}
+		
+		Complex[][] convolvedImage =(Complex[][]) FFT.mdfft(result, false);
 
+		//FIXME: method used to compute score does not reflect reality
+		//we expect a great score when HIT, and 0 if no HIT
+		//same thing with rotation
+		for(int j=0;j<convolvedImage[0].length;j++){
+			for (int i = 0;i<convolvedImage.length;i++){
+				matchingScore+=convolvedImage[i][j].getReal();
+			}		
+		}
 		return matchingScore;
 	}
 
