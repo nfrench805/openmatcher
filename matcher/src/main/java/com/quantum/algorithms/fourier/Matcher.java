@@ -57,7 +57,15 @@ public class Matcher {
 	public Complex[][] complete(Complex[][] data) {
 		int width = data.length;
 		int height = data[0].length;
-
+		
+		if (!isPowerOf2(width)){
+			
+		}
+		
+		if (!isPowerOf2(height)){
+			
+		}
+		
 		return null;
 	}
 
@@ -70,4 +78,16 @@ public class Matcher {
 	public boolean isPowerOf2(final long number) {
 		return ((number > 0) && (number & (number - 1)) == 0);
 	}
+	
+	/**
+	 * return nearest power of 2
+	 * @param i
+	 * @return
+	 */
+	public long  nearestSuperiorPow2(final long i)
+	{			
+		long x = i>0 ?((i - 1) & i):1;
+
+		   return (!isPowerOf2(x)) ? nearestSuperiorPow2(x) : x << 1;
+		}
 }
