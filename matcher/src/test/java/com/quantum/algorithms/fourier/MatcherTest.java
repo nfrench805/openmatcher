@@ -61,15 +61,14 @@ public class MatcherTest extends TestCase {
 		assertTrue(matcher.isPowerOf2(8));
 		assertFalse(matcher.isPowerOf2(922337203685477580L));
 	}
-	
+
 	@Test
-	public void testNearestPowerOf2() {		
-		assertEquals(2,matcher.nearestSuperiorPow2(0));
-		assertEquals(2,matcher.nearestSuperiorPow2(2));
-		assertEquals(8,matcher.nearestSuperiorPow2(7));
-		assertEquals(1024,matcher.nearestSuperiorPow2(999));
-		
-		
+	public void testNearestPowerOf2() {
+		assertEquals(2, matcher.nearestSuperiorPow2(0));
+		assertEquals(2, matcher.nearestSuperiorPow2(2));
+		assertEquals(8, matcher.nearestSuperiorPow2(7));
+		assertEquals(1024, matcher.nearestSuperiorPow2(999));
+
 	}
 
 	/**
@@ -82,14 +81,19 @@ public class MatcherTest extends TestCase {
 
 		for (int j = 0; j < 8; j++) {
 			for (int i = 0; i < 8; i++) {
-				image1[i][j] = new Complex(i % 2, 0);
-				image2[i][j] = new Complex(i % 2, 0);
+				if (i == j) {
+					image1[i][j] = new Complex(1, 0);
+				} else {
+					image1[i][j] = new Complex(0, 0);
+				}
+				image2[i][j] = image1[i][j];
+
 			}
 		}
 
-		int score = matcher.match(image1, image2);
+		double score = matcher.match(image1, image2);
 		logger.info("Score computed = " + score);
-		assertNotSame(0, score);
+		assertNotSame(0, (int) score);
 	}
 
 	/**
@@ -107,9 +111,9 @@ public class MatcherTest extends TestCase {
 			}
 		}
 
-		int score = matcher.match(image1, image2);
+		double score = matcher.match(image1, image2);
 		logger.info("Score computed = " + score);
-		assertEquals(0, score);
+		assertEquals(0, (int) score);
 	}
 
 	/**
@@ -123,19 +127,27 @@ public class MatcherTest extends TestCase {
 
 		for (int j = 0; j < 8; j++) {
 			for (int i = 0; i < 8; i++) {
-				image1[i][j] = new Complex(i % 2, 0);
+				if (i == 2) {
+					image1[i][j] = new Complex(1, 0);
+				} else {
+					image1[i][j] = new Complex(0, 0);
+				}
 			}
 		}
 
 		for (int j = 0; j < 8; j++) {
 			for (int i = 0; i < 8; i++) {
-				image2[i][j] = image1[(i + 1) % 8][j];
+				if (i == 6) {
+					image2[i][j] = new Complex(1, 0);
+				} else {
+					image2[i][j] = new Complex(0, 0);
+				}
 			}
 		}
 
-		int score = matcher.match(image1, image2);
+		double score = matcher.match(image1, image2);
 		logger.info("Score computed = " + score);
-		assertNotSame(0, score);
+		assertNotSame(0, (int) score);
 	}
 
 	/**
@@ -149,19 +161,27 @@ public class MatcherTest extends TestCase {
 
 		for (int j = 0; j < 8; j++) {
 			for (int i = 0; i < 8; i++) {
-				image1[i][j] = new Complex(i % 2, 0);
+				if (j == 1) {
+					image1[i][j] = new Complex(1, 0);
+				} else {
+					image1[i][j] = new Complex(0, 0);
+				}
 			}
 		}
 
 		for (int j = 0; j < 8; j++) {
 			for (int i = 0; i < 8; i++) {
-				image2[i][j] = image1[i][(j + 1) % 8];
+				if (j == 3) {
+					image2[i][j] = new Complex(1, 0);
+				} else {
+					image2[i][j] = new Complex(0, 0);
+				}
 			}
 		}
 
-		int score = matcher.match(image1, image2);
+		double score = matcher.match(image1, image2);
 		logger.info("Score computed = " + score);
-		assertNotSame(0, score);
+		assertNotSame(0, (int) score);
 	}
 
 	/**
@@ -193,9 +213,9 @@ public class MatcherTest extends TestCase {
 			}
 		}
 
-		int score = matcher.match(image1, image2);
+		double score = matcher.match(image1, image2);
 		logger.info("Score computed = " + score);
-		//assertNotSame(0, score);
+		assertNotSame(0, (int) score);
 	}
 
 }
