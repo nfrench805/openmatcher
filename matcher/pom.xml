@@ -8,12 +8,16 @@
   <packaging>jar</packaging>
 
   <name>matcher</name>
-  <url>http://maven.apache.org</url>
+  <description>encode image to extract caracteristics points - match 2 images (encoded) and get a Hit score System is developped in Java</description>
+  <url>http://code.google.com/p/openmatcher/</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <organization>
+  	<name>quantum</name>
+  </organization>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
