@@ -63,6 +63,44 @@ public class Matcher {
 		}
 		return R;
 	}
+	
+	/**
+	 * main method computing a score (probability that candidate image matches
+	 * against reference image
+	 * 
+	 * @param reference
+	 * @param candidate
+	 * @return
+	 */
+	public double match(final double[][] reference,final double[][] candidate){
+		/**
+		 * Step 1: create a Complex[][] matrix, where real part
+		 * is reference, and imaginary part for candidate
+		 */
+		int width = reference.length;
+		int height = reference.length;
+		
+		Complex[][] image1 = new Complex[width][height];
+		Complex[][] image2 = new Complex[width][height];
+		for (int i=0;i<width;i++){
+			for(int j=0;j<height;j++){
+				image1[i][j] = new Complex(reference[i][j],0);
+				image2[i][j] = new Complex(candidate[i][j],0);
+			}
+		}
+		
+		/**
+		 * compute FFT
+		 */
+		Complex[][] Fimage1 = getFFT(image1);
+		Complex[][] Fimage2 = getFFT(image2);
+							
+		/**
+		 * 
+		 */
+		
+		return computeSpectrum(Fimage1, Fimage2);
+	}
 
 	/**
 	 * main method computing a score (probability that candidate image matches
@@ -80,6 +118,15 @@ public class Matcher {
 		Complex[][] Fimage1 = getFFT(reference);
 		Complex[][] Fimage2 = getFFT(candidate);
 
+		return computeSpectrum(Fimage1, Fimage2);
+	}
+
+	/**
+	 * @param Fimage1
+	 * @param Fimage2
+	 * @return
+	 */
+	public double computeSpectrum(Complex[][] Fimage1, Complex[][] Fimage2) {
 		/**
 		 * Step 1.1 : calculate the cross-power spectrum by taking the complex
 		 * conjugate of the second result, multiplying the Fourier transforms

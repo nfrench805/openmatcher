@@ -217,5 +217,39 @@ public class MatcherTest extends TestCase {
 		logger.info("Score computed = " + score);
 		assertNotSame(0, (int) score);
 	}
+	
+	/**
+	 * test match method 2 images (same values with 90° rotation) expect a high
+	 * Score
+	 */
+	@Test
+	public void testMatchDoubleWithSameImagesRotation() {
+		double[][] image1 = new double[8][8];
+		double[][] image2 = new double[8][8];
+
+		for (int j = 0; j < 8; j++) {
+			for (int i = 0; i < 8; i++) {
+				if (i == 3 || i == 4) {
+					image1[i][j] = 1.0;
+				} else {
+					image1[i][j] = 0.0;
+				}
+			}
+		}
+
+		for (int j = 0; j < 8; j++) {
+			for (int i = 0; i < 8; i++) {
+				if (j == 3 || j == 4) {
+					image2[i][j] = 1.0;
+				} else {
+					image2[i][j] = 0.0;
+				}
+			}
+		}
+
+		double score = matcher.match(image1, image2);
+		logger.info("Score computed = " + score);
+		assertNotSame(0, (int) score);
+	}
 
 }
