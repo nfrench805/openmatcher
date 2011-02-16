@@ -77,17 +77,29 @@ public class Matcher {
 		 * Step 1: create a Complex[][] matrix, where real part
 		 * is reference, and imaginary part for candidate
 		 */
-		int width = reference.length;
-		int height = reference.length;
 		
-		Complex[][] image1 = new Complex[width][height];
-		Complex[][] image2 = new Complex[width][height];
+		
+		int width = reference.length;
+		int height = reference.length;	
+		logger.info("width="+width+" height="+height);
+		
+		Complex[][] image1 = new Complex[width][height];				
 		for (int i=0;i<width;i++){
 			for(int j=0;j<height;j++){
-				image1[i][j] = new Complex(reference[i][j],0);
-				image2[i][j] = new Complex(candidate[i][j],0);
+				logger.info("adding ["+i+"]["+j+"] ="+reference[i][j]);
+				image1[i][j] = new Complex(reference[i][j],0);				
 			}
 		}
+		
+		width = candidate.length;
+		height = candidate.length;		
+		Complex[][] image2 = new Complex[width][height];				
+		for (int i=0;i<width;i++){
+			for(int j=0;j<height;j++){
+				image2[i][j] = new Complex(candidate[i][j],0);				
+			}
+		}
+		
 		
 		/**
 		 * compute FFT
@@ -112,6 +124,7 @@ public class Matcher {
 	 */
 	public double match(final Complex[][] reference, final Complex[][] candidate) {
 
+				
 		/**
 		 * Step 1: compute FFT
 		 */
@@ -229,7 +242,9 @@ public class Matcher {
 	 * @return
 	 */
 	public Complex[][] getFFT(final Complex[][] data) {
-		return (Complex[][]) FFT.mdfft(data, true);
+		
+		Complex[][] dataComplete = complete(data);
+		return (Complex[][]) FFT.mdfft(dataComplete, true);
 	}
 	
 	/**
