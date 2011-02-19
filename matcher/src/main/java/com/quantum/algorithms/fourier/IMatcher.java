@@ -1,21 +1,8 @@
 package com.quantum.algorithms.fourier;
 
-import java.awt.geom.Point2D;
-
 import org.apache.commons.math.complex.Complex;
 
 public interface IMatcher {
-
-	/**
-	 * compute cross power Spectrum suppose that Ga and Gb have same size
-	 * (N1xN2)
-	 * 
-	 * @param Ga
-	 * @param Gb
-	 * @return
-	 */
-	public abstract Complex[][] getCrossPowerSpectrum(final Complex[][] Ga,
-			final Complex[][] Gb);
 
 	/**
 	 * main method computing a score (probability that candidate image matches

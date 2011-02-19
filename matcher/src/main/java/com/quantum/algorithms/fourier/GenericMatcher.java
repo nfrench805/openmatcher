@@ -10,73 +10,39 @@ import org.apache.commons.math.complex.Complex;
 import org.apache.commons.math.transform.FastFourierTransformer;
 
 /**
- * @author Najoua Dergane
+ * @author pascal dergane
  * 
  */
-public class GenericMatcher implements IMatcher {
+public class GenericMatcher  {
 	
 	/**
 	 * logger to get more information during execution
 	 */
 	protected Logger logger = Logger.getLogger(GenericMatcher.class.getName());
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.quantum.algorithms.fourier.IMatcher#getCrossPowerSpectrum(org.apache
-	 * .commons.math.complex.Complex[][],
-	 * org.apache.commons.math.complex.Complex[][])
+	
+	
+	/**
+	 * compute cross phase Spectrum as F* conjugate(G) / abs(F*conjugate(G))
+	 * @param F
+	 * @param G
+	 * @return
 	 */
-	public Complex[][] getCrossPowerSpectrum(Complex[][] Ga, Complex[][] Gb) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public Complex[][] getCrossPhaseSpectrum(final Complex[][] F,
+			final Complex[][] G) {
+		int N1 = F.length;
+		int N2 = F[0].length;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.quantum.algorithms.fourier.IMatcher#match(double[][],
-	 * double[][])
-	 */
-	public double match(double[][] reference, double[][] candidate) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+		Complex[][] R = new Complex[N1][N2];
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.quantum.algorithms.fourier.IMatcher#getCrossPhaseSpectrum(org.apache
-	 * .commons.math.complex.Complex[][],
-	 * org.apache.commons.math.complex.Complex[][])
-	 */
-	public Complex[][] getCrossPhaseSpectrum(Complex[][] F, Complex[][] G) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.quantum.algorithms.fourier.IMatcher#get2D_DFT(double[][])
-	 */
-	public Complex[][] get2D_DFT(double[][] f) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.quantum.algorithms.fourier.IMatcher#get2D_IDFT(org.apache.commons
-	 * .math.complex.Complex[][], int, int)
-	 */
-	public Complex[][] get2D_IDFT(Complex[][] R, int N1, int N2) {
-		// TODO Auto-generated method stub
-		return null;
+		for (int k1 = 0; k1 < N1; k1++) {
+			for (int k2 = 0; k2 < N2; k2++) {
+				Complex tempo = F[k1][k2].multiply(G[k1][k2].conjugate());
+				R[k1][k2] = (tempo.abs() > 0) ? tempo
+						.multiply(1L / tempo.abs()) : tempo;
+			}
+		}
+		return R;
 	}
 
 	/*
