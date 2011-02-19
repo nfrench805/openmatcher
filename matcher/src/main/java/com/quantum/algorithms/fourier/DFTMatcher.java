@@ -12,12 +12,17 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		
 		logger.info("width=" + N1 + " height=" + N2);
 		// we suppose images with same size
+		logger.info("computing DFT of reference...");
 		Complex[][] F = get2D_DFT(reference);
+		logger.info("computing DFT of candidate...");
 		Complex[][] G = get2D_DFT(candidate);
+		logger.info("computing cross phase spectrum...");
 		Complex[][] R = getCrossPhaseSpectrum(F, G);
+		logger.info("computing POC...");
 		Complex[][] POC = get2D_IDFT(R, N1, N2);
+		logger.info("looking for a peak in POC...");
 		Point2D peak = getPeak(POC);
-		Complex score = POC[(int) peak.getX()][(int) peak.getY()];
+		Complex score = POC[(int) peak.getX()][(int) peak.getY()];		
 		return score.getReal();
 	}
 
@@ -55,7 +60,7 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 
 		for (int k1 = 0; k1 < N1; k1++) {
 			for (int k2 = 0; k2 < N2; k2++) {
-				F[k1][k2] = this.getDFT(f, k1, k2);
+				F[k1][k2] = getDFT(f, k1, k2);				
 			}
 		}
 		return F;
