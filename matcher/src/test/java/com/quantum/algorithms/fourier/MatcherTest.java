@@ -20,9 +20,10 @@ import org.junit.Test;
  */
 public class MatcherTest extends TestCase {
 
-	private IMatcher matcher = new FFTMatcher();
+	private IMatcher fftmatcher = new FFTMatcher();
+	private IMatcher dftmatcher = new DFTMatcher();
 	private Logger logger = Logger.getLogger(MatcherTest.class.getName());
-	private final int size = 512;
+	private final int size = 256;
 
 	/**
 	 * @throws Exception
@@ -57,18 +58,18 @@ public class MatcherTest extends TestCase {
 	 */
 	@Test
 	public void testPowerOf2() {
-		assertFalse(((GenericMatcher)matcher).isPowerOf2(0));
-		assertFalse(((GenericMatcher)matcher).isPowerOf2(10));
-		assertTrue(((GenericMatcher)matcher).isPowerOf2(8));
-		assertFalse(((GenericMatcher)matcher).isPowerOf2(922337203685477580L));
+		assertFalse(((GenericMatcher)fftmatcher).isPowerOf2(0));
+		assertFalse(((GenericMatcher)fftmatcher).isPowerOf2(10));
+		assertTrue(((GenericMatcher)fftmatcher).isPowerOf2(8));
+		assertFalse(((GenericMatcher)fftmatcher).isPowerOf2(922337203685477580L));
 	}
 
 	@Test
 	public void testNearestPowerOf2() {
-		assertEquals(2, ((GenericMatcher)matcher).nearestSuperiorPow2(0));
-		assertEquals(2, ((GenericMatcher)matcher).nearestSuperiorPow2(2));
-		assertEquals(8, ((GenericMatcher)matcher).nearestSuperiorPow2(7));
-		assertEquals(1024, ((GenericMatcher)matcher).nearestSuperiorPow2(999));
+		assertEquals(2, ((GenericMatcher)fftmatcher).nearestSuperiorPow2(0));
+		assertEquals(2, ((GenericMatcher)fftmatcher).nearestSuperiorPow2(2));
+		assertEquals(8, ((GenericMatcher)fftmatcher).nearestSuperiorPow2(7));
+		assertEquals(1024, ((GenericMatcher)fftmatcher).nearestSuperiorPow2(999));
 
 	}
 	
@@ -87,7 +88,12 @@ public class MatcherTest extends TestCase {
 			}
 		}
 		
-		double score = matcher.match(f, g);
+		double score = fftmatcher.match(f, g);
+		
+		logger.info("score=" + score);
+		assertTrue(score>0.3);
+		
+		score = dftmatcher.match(f,g);
 		logger.info("score=" + score);
 		assertTrue(score>0.3);
 	}
@@ -106,7 +112,11 @@ public class MatcherTest extends TestCase {
 			}
 		}
 		
-		double score = matcher.match(f, g);
+		double score = fftmatcher.match(f, g);
+		logger.info("score=" + score);
+		assertTrue(0.3>score);
+		
+		score = dftmatcher.match(f,g);
 		logger.info("score=" + score);
 		assertTrue(0.3>score);
 	}
@@ -132,8 +142,12 @@ public class MatcherTest extends TestCase {
 			}
 		}
 		
-		double score = matcher.match(f, g);
+		double score = fftmatcher.match(f, g);
 		logger.info("score=" + score);
 		assertTrue(score>0.3);
+	
+		score = dftmatcher.match(f,g);
+		logger.info("score=" + score);
+		assertTrue(0.3>score);
 	}
 }
