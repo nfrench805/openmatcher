@@ -22,6 +22,7 @@ public class MatcherTest extends TestCase {
 
 	private Matcher matcher = new Matcher();
 	private Logger logger = Logger.getLogger(MatcherTest.class.getName());
+	private final int size = 512;
 
 	/**
 	 * @throws Exception
@@ -74,39 +75,65 @@ public class MatcherTest extends TestCase {
 	
 	@Test 
 	public void testMatch(){
-		double[][] f= new double[8][8];
-		double[][] g= new double[8][8];
+		double[][] f= new double[size][size];
+		double[][] g= new double[size][size];
 		
 		//create a random image
 		//f and g are same
-		for (int i=0;i<8;i++){
-			for (int j=0;j<8;j++){
+		for (int i=0;i<size;i++){
+			for (int j=0;j<size;j++){
 				f[i][j]=(Math.random()*255);
 				g[i][j] = f[i][j];
 			}
 		}
 		
 		double score = matcher.match(f, g);
-		
-		assertNotSame(0L,score);
+		logger.info("score=" + score);
+		assertTrue(score>0.3);
 	}
 	
 	@Test 
 	public void testNoMatch(){
-		double[][] f= new double[8][8];
-		double[][] g= new double[8][8];
+		double[][] f= new double[size][size];
+		double[][] g= new double[size][size];
 		
 		//create a random image
 		//f and g are different
-		for (int i=0;i<8;i++){
-			for (int j=0;j<8;j++){
+		for (int i=0;i<size;i++){
+			for (int j=0;j<size;j++){
 				f[i][j]=(Math.random()*255);
-				g[i][j] = 0;
+				g[i][j] = (Math.random()*255);
 			}
 		}
 		
 		double score = matcher.match(f, g);
+		logger.info("score=" + score);
+		assertTrue(0.3>score);
+	}
+	
+	@Test 
+	public void testMatchTranslation(){
+		double[][] f= new double[size][size];
+		double[][] g= new double[size][size];
 		
-		assertEquals(0L,score);
+		//create a random image
+		//f and g are same
+		for (int i=0;i<size;i++){
+			for (int j=0;j<size;j++){
+				f[i][j]=(Math.random()*255);				
+			}
+		}
+		
+		int deltaX=size/4;
+		int deltaY=size/4;
+		for (int i=0;i<size;i++){
+			for (int j=0;j<size;j++){
+				g[i][j]=f[(i+deltaX)%size][(j+deltaY)%size];				
+			}
+		}
+		
+		double score = matcher.match(f, g);
+		logger.info("score=" + score);
+		assertTrue(score>0.3);
 	}
 }

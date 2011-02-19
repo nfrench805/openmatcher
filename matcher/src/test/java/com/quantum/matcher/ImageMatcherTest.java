@@ -23,7 +23,7 @@ public class ImageMatcherTest extends TestCase {
 	private ImageMatcher matcher = new ImageMatcher();
 	//private ClassLoader loader = getClass().getClassLoader();
 	private String refFilename = "C:/workspace/matcher/src/test/resources/data/1/001_1_1.bmp";
-	private String candFilename = "C:/workspace/matcher/src/test/resources/data/1/001_1_2.bmp";
+	private String candFilename = "C:/workspace/matcher/src/test/resources/data/1/001_1_1.bmp";
 	// private InputStream reference = loader.getResourceAsStream(filename);
 	
 
@@ -44,7 +44,7 @@ public class ImageMatcherTest extends TestCase {
 
 		double score = matcher.match(reference, candidate);
 
-		assertNotSame(0L, score);
+		assertTrue(score>0L);
 	}
 
 	/**

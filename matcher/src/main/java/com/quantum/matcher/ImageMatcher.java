@@ -38,7 +38,7 @@ public class ImageMatcher {
 		double[][] imgRef = new double[width][height];
 		for (int x=0;x<width;x++){
 			for (int y=0;y<height;y++){
-				imgRef[x][y] = imageReference.getRGB(x, y) & 0xff;
+				imgRef[x][y] = (int) imageReference.getRGB(x, y);
 			}
 		}
 		
@@ -47,7 +47,7 @@ public class ImageMatcher {
 		double[][] imgCand = new double[width][height];
 		for (int x=0;x<width;x++){
 			for (int y=0;y<height;y++){
-				imgRef[x][y] = imageCandidate.getRGB(x, y) & 0xff;
+				imgRef[x][y] = (int) imageCandidate.getRGB(x, y) ;
 			}
 		}		
 		return matcher.match(imgRef, imgCand);		
