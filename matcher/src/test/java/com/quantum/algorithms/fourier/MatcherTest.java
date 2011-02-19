@@ -20,10 +20,9 @@ import org.junit.Test;
  */
 public class MatcherTest extends TestCase {
 
-	private IMatcher fftmatcher = new FFTMatcher();
-	private IMatcher dftmatcher = new DFTMatcher();
+	private IMatcher fftmatcher = new FFTMatcher();	
 	private Logger logger = Logger.getLogger(MatcherTest.class.getName());
-	private final int size = 256;
+	private final int size = 512;
 
 	/**
 	 * @throws Exception
@@ -92,10 +91,7 @@ public class MatcherTest extends TestCase {
 		
 		logger.info("score=" + score);
 		assertTrue(score>0.3);
-		
-		score = dftmatcher.match(f,g);
-		logger.info("score=" + score);
-		assertTrue(score>0.3);
+				
 	}
 	
 	@Test 
@@ -115,10 +111,7 @@ public class MatcherTest extends TestCase {
 		double score = fftmatcher.match(f, g);
 		logger.info("score=" + score);
 		assertTrue(0.3>score);
-		
-		score = dftmatcher.match(f,g);
-		logger.info("score=" + score);
-		assertTrue(0.3>score);
+				
 	}
 	
 	@Test 
@@ -145,9 +138,6 @@ public class MatcherTest extends TestCase {
 		double score = fftmatcher.match(f, g);
 		logger.info("score=" + score);
 		assertTrue(score>0.3);
-	
-		score = dftmatcher.match(f,g);
-		logger.info("score=" + score);
-		assertTrue(0.3>score);
+			
 	}
 }
