@@ -45,8 +45,8 @@ public class Matcher {
 		for (int i = 0; i < Ga_width; i++) {
 			for (int j = 0; j < Ga_height; j++) {
 				Complex tempo = Ga[i][j].multiply(Gb[i][j].conjugate());
-				R[i][j] = (0L != tempo.abs()) ? tempo.multiply(1L / tempo
-						.abs()) : tempo;
+				R[i][j] = (0L != tempo.abs()) ? tempo
+						.multiply(1L / tempo.abs()) : tempo;
 			}
 		}
 		return R;
@@ -67,113 +67,145 @@ public class Matcher {
 		 */
 
 		int N1 = reference.length;
-		int N2 = reference.length;
+		int N2 = reference[0].length;
+		N1=(int) ((this.isPowerOf2(N1))?N1:this.nearestSuperiorPow2(N1));
+		N2=(int) ((this.isPowerOf2(N2))?N2:this.nearestSuperiorPow2(N2));
+		
+		double[][] newRef=new double [N1][N2];
+		double[][] newCand=new double [N1][N2];
+		
+		
+		for (int i=0;i<N1;i++){
+			for (int j=0;j<N2;j++){
+				newRef[i][j]=reference[i%reference.length][j%reference[0].length];
+				newCand[i][j]=candidate[i%candidate.length][j%candidate[0].length];
+			}
+		}
+		
 		logger.info("width=" + N1 + " height=" + N2);
-		//we suppose images with same size 
-		Complex[][] F= this.get2D_DFT(reference);
-		Complex[][] G= this.get2D_DFT(candidate);
-		Complex[][] R= getCrossPhaseSpectrum(F,G);
+		// we suppose images with same size
+		Complex[][] F = this.get2D_DFT(newRef);
+		Complex[][] G = this.get2D_DFT(newCand);
+		Complex[][] R = getCrossPhaseSpectrum(F, G);
 		Complex[][] POC = this.get2D_IDFT(R, N1, N2);
 		Point2D peak = this.getPeak(POC);
 		Complex score = POC[(int) peak.getX()][(int) peak.getY()];
-		return score.getReal(); 
+		return score.getReal();
 	}
-	
+
 	/**
 	 * compute cross phase normalized
+	 * 
 	 * @param F
 	 * @param G
 	 * @return
 	 */
-	public Complex[][] getCrossPhaseSpectrum(final Complex[][] F, final Complex[][] G){
+	public Complex[][] getCrossPhaseSpectrum(final Complex[][] F,
+			final Complex[][] G) {
 		int N1 = F.length;
 		int N2 = F[0].length;
-		
+
 		Complex[][] R = new Complex[N1][N2];
-		
-		for (int k1=0;k1<N1;k1++){
-			for (int k2=0;k2<N2;k2++){
+
+		for (int k1 = 0; k1 < N1; k1++) {
+			for (int k2 = 0; k2 < N2; k2++) {
 				Complex tempo = F[k1][k2].multiply(G[k1][k2].conjugate());
-				R[k1][k2]=(tempo.abs()>0)?tempo.multiply(1L/tempo.abs()):tempo;
+				R[k1][k2] = (tempo.abs() > 0) ? tempo
+						.multiply(1L / tempo.abs()) : tempo;
 			}
 		}
 		return R;
 	}
-	
-	public Complex getDFT(final double[][] f,final int k1,final int k2){
+
+	public Complex getDFT(final double[][] f, final int k1, final int k2) {
 		int N1 = f.length;
 		int N2 = f[0].length;
-		Complex F=new Complex(0,0);
-		
-		for (int n1=0;n1<N1;n1++){
-			for(int n2=0;n2<N2;n2++){				
-				double a1=-2*Math.PI*k1*n1/N1; 
-				double a2=-2*Math.PI*k2*n2/N2;
-				Complex W1 = new Complex(Math.cos(a1),Math.sin(a1));
-				Complex W2 = new Complex(Math.cos(a2),Math.sin(a2));
-				 F.add(W1.multiply(W2).multiply(f[n1][n2]));
-			}
-		}
-		return F;
-	}
-	
-	/**
-	 * compute 2D DFT
-	 * @param f
-	 * @return
-	 */
-	public Complex[][] get2D_DFT(final double[][] f){
-		int N1 = f.length;
-		int N2 = f[0].length;
-		Complex[][] F= new Complex[N1][N2];
-		
-		for (int k1=0;k1<N1;k1++){
-			for(int k2=0;k2<N2;k2++){
-				F[k1][k2] = this.getDFT(f,k1,k2);
+		Complex F = new Complex(0, 0);
+
+		for (int n1 = 0; n1 < N1; n1++) {
+			for (int n2 = 0; n2 < N2; n2++) {
+				double a1 = -2 * Math.PI * k1 * n1 / N1;
+				double a2 = -2 * Math.PI * k2 * n2 / N2;
+				Complex W1 = new Complex(Math.cos(a1), Math.sin(a1));
+				Complex W2 = new Complex(Math.cos(a2), Math.sin(a2));
+				F = F.add(W1.multiply(W2).multiply(f[n1][n2]));
 			}
 		}
 		return F;
 	}
 
-	
-	public Complex getIDFT(final Complex[][] R, final int n1, final int n2){
-		int N1 = R.length;
-		int N2 = R[0].length;
-		Complex r=new Complex(0,0);
-		
-		for (int k1=0;k1<N1;k1++){
-			for(int k2=0;k2<N2;k2++){				
-				double a1=2*Math.PI*k1*n1/N1; 
-				double a2=2*Math.PI*k2*n2/N2;
-				Complex W1 = new Complex(Math.cos(a1),Math.sin(a1));
-				Complex W2 = new Complex(Math.cos(a2),Math.sin(a2));
-				 r.add(W1.multiply(W2).multiply(R[k1][k2]));
+	/**
+	 * compute 2D DFT
+	 * 
+	 * @param f
+	 * @return
+	 */
+	public Complex[][] get2D_DFT(final double[][] f) {
+		int N1 = f.length;
+		int N2 = f[0].length;
+		Complex[][] F = new Complex[N1][N2];
+
+		// for (int k1=0;k1<N1;k1++){
+		// for(int k2=0;k2<N2;k2++){
+		// F[k1][k2] = this.getDFT(f,k1,k2);
+		// }
+		// }
+
+		for (int k1 = 0; k1 < N1; k1++) {
+			for (int k2 = 0; k2 < N2; k2++) {
+				F[k1][k2] = new Complex(f[k1][k2], 0);
 			}
 		}
-		return r.multiply(1L/(N1*N2));
-		
+
+		F = (Complex[][]) FFT.mdfft(F, true);
+
+		return F;
 	}
-	
+
+	public Complex getIDFT(final Complex[][] R, final int n1, final int n2) {
+		int N1 = R.length;
+		int N2 = R[0].length;
+		Complex r = new Complex(0, 0);
+
+		for (int k1 = 0; k1 < N1; k1++) {
+			for (int k2 = 0; k2 < N2; k2++) {
+				double a1 = 2 * Math.PI * k1 * n1 / N1;
+				double a2 = 2 * Math.PI * k2 * n2 / N2;
+				Complex W1 = new Complex(Math.cos(a1), Math.sin(a1));
+				Complex W2 = new Complex(Math.cos(a2), Math.sin(a2));
+				r = r.add(W1.multiply(W2).multiply(R[k1][k2]));
+			}
+		}
+		return r.multiply(1L / (N1 * N2));
+
+	}
+
 	/**
 	 * compute Inverse Discrete Fourier
+	 * 
 	 * @param R
 	 * @param N1
 	 * @param N2
 	 * @return
 	 */
-	public Complex[][] get2D_IDFT(final Complex[][] R,final int N1, final int N2){
-		Complex[][] r=new Complex[N1][N2];
-		for (int k1=0;k1<N1;k1++){
-			for(int k2=0;k2<N2;k2++){
-				r[k1][k2] = this.getIDFT(R,k1,k2);				
+	public Complex[][] get2D_IDFT(final Complex[][] R, final int N1,
+			final int N2) {
+		Complex[][] r = new Complex[N1][N2];
+		// for (int k1 = 0; k1 < N1; k1++) {
+		// for (int k2 = 0; k2 < N2; k2++) {
+		// r[k1][k2] = this.getIDFT(R, k1, k2);
+		// }
+		// }
+
+		r = (Complex[][]) FFT.mdfft(R, false);
+
+		for (int k1 = 0; k1 < N1; k1++) {
+			for (int k2 = 0; k2 < N2; k2++) {
+				r[k1][k2] = r[k1][k2].multiply(1L / Math.sqrt(N1 * N2));
 			}
 		}
 		return r;
 	}
-	
-	
-	
-	
 
 	/**
 	 * return x,y as Point2D.Double max value
@@ -186,9 +218,10 @@ public class Matcher {
 		int xMax = 0;
 		int yMax = 0;
 		double max = data[xMax][yMax].getReal();
-
+		double average =0;
 		for (int i = 0; i < data.length; i++) {
 			for (int j = 0; j < data[0].length; j++) {
+				average+=data[i][j].getReal();
 				if (max < data[i][j].getReal()) {
 					max = data[i][j].getReal();
 					xMax = i;
@@ -198,10 +231,12 @@ public class Matcher {
 		}
 
 		Point2D p = new Point2D.Double();
+		logger.info("Maximum found :" + max + " [" + xMax + "][" + yMax + "]");
+		logger.info("average ="+average/data.length/data[0].length);
 		p.setLocation(xMax, yMax);
 		return p;
 	}
-	
+
 	/**
 	 * check if a number is power of 2
 	 * 
