@@ -70,186 +70,43 @@ public class MatcherTest extends TestCase {
 		assertEquals(1024, matcher.nearestSuperiorPow2(999));
 
 	}
-
-	/**
-	 * test match method 2 images (same values) expect a high Score
-	 */
-	@Test
-	public void testMatch() {
-		Complex[][] image1 = new Complex[8][8];
-		Complex[][] image2 = new Complex[8][8];
-
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 8; i++) {
-				if (i == j) {
-					image1[i][j] = new Complex(1, 0);
-				} else {
-					image1[i][j] = new Complex(0, 0);
-				}
-				image2[i][j] = image1[i][j];
-
+	
+	
+	@Test 
+	public void testMatch(){
+		double[][] f= new double[8][8];
+		double[][] g= new double[8][8];
+		
+		//create a random image
+		//f and g are same
+		for (int i=0;i<8;i++){
+			for (int j=0;j<8;j++){
+				f[i][j]=(Math.random()*255);
+				g[i][j] = f[i][j];
 			}
 		}
-
-		double score = matcher.match(image1, image2);
-		logger.info("Score computed = " + score);
-		assertNotSame(0, (int) score);
-	}
-
-	/**
-	 * test match method 2 images (different values) expect a lower Score
-	 */
-	@Test
-	public void testMatchWithDifferentImages() {
-		Complex[][] image1 = new Complex[8][8];
-		Complex[][] image2 = new Complex[8][8];
-
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 8; i++) {
-				image1[i][j] = new Complex(i % 2, 0);
-				image2[i][j] = new Complex(0, 0);
-			}
-		}
-
-		double score = matcher.match(image1, image2);
-		logger.info("Score computed = " + score);
-		assertEquals(0, (int) score);
-	}
-
-	/**
-	 * test match method 2 images (same values with horizontal translation)
-	 * expect a high Score
-	 */
-	@Test
-	public void testMatchWithSameImagesHTranslated() {
-		Complex[][] image1 = new Complex[8][8];
-		Complex[][] image2 = new Complex[8][8];
-
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 8; i++) {
-				if (i == 2) {
-					image1[i][j] = new Complex(1, 0);
-				} else {
-					image1[i][j] = new Complex(0, 0);
-				}
-			}
-		}
-
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 8; i++) {
-				if (i == 6) {
-					image2[i][j] = new Complex(1, 0);
-				} else {
-					image2[i][j] = new Complex(0, 0);
-				}
-			}
-		}
-
-		double score = matcher.match(image1, image2);
-		logger.info("Score computed = " + score);
-		assertNotSame(0, (int) score);
-	}
-
-	/**
-	 * test match method 2 images (same values with vertical translation) expect
-	 * a high Score
-	 */
-	@Test
-	public void testMatchWithSameImagesVTranslated() {
-		Complex[][] image1 = new Complex[8][8];
-		Complex[][] image2 = new Complex[8][8];
-
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 8; i++) {
-				if (j == 1) {
-					image1[i][j] = new Complex(1, 0);
-				} else {
-					image1[i][j] = new Complex(0, 0);
-				}
-			}
-		}
-
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 8; i++) {
-				if (j == 3) {
-					image2[i][j] = new Complex(1, 0);
-				} else {
-					image2[i][j] = new Complex(0, 0);
-				}
-			}
-		}
-
-		double score = matcher.match(image1, image2);
-		logger.info("Score computed = " + score);
-		assertNotSame(0, (int) score);
-	}
-
-	/**
-	 * test match method 2 images (same values with 90° rotation) expect a high
-	 * Score
-	 */
-	@Test
-	public void testMatchWithSameImagesRotation() {
-		Complex[][] image1 = new Complex[8][8];
-		Complex[][] image2 = new Complex[8][8];
-
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 8; i++) {
-				if (i == 3 || i == 4) {
-					image1[i][j] = new Complex(1, 0);
-				} else {
-					image1[i][j] = new Complex(0, 0);
-				}
-			}
-		}
-
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 8; i++) {
-				if (j == 3 || j == 4) {
-					image2[i][j] = new Complex(1, 0);
-				} else {
-					image2[i][j] = new Complex(0, 0);
-				}
-			}
-		}
-
-		double score = matcher.match(image1, image2);
-		logger.info("Score computed = " + score);
-		assertNotSame(0, (int) score);
+		
+		double score = matcher.match(f, g);
+		
+		assertNotSame(0L,score);
 	}
 	
-	/**
-	 * test match method 2 images (same values with 90° rotation) expect a high
-	 * Score
-	 */
-	@Test
-	public void testMatchDoubleWithSameImagesRotation() {
-		double[][] image1 = new double[8][8];
-		double[][] image2 = new double[8][8];
-
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 8; i++) {
-				if (i == 3 || i == 4) {
-					image1[i][j] = 1.0;
-				} else {
-					image1[i][j] = 0.0;
-				}
+	@Test 
+	public void testNoMatch(){
+		double[][] f= new double[8][8];
+		double[][] g= new double[8][8];
+		
+		//create a random image
+		//f and g are different
+		for (int i=0;i<8;i++){
+			for (int j=0;j<8;j++){
+				f[i][j]=(Math.random()*255);
+				g[i][j] = 0;
 			}
 		}
-
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 8; i++) {
-				if (j == 3 || j == 4) {
-					image2[i][j] = 1.0;
-				} else {
-					image2[i][j] = 0.0;
-				}
-			}
-		}
-
-		double score = matcher.match(image1, image2);
-		logger.info("Score computed = " + score);
-		assertNotSame(0, (int) score);
+		
+		double score = matcher.match(f, g);
+		
+		assertEquals(0L,score);
 	}
-
 }

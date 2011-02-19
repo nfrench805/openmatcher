@@ -25,13 +25,10 @@ public class Matcher {
 	 * reverseFFT
 	 */
 	private FastFourierTransformer FFT = new FastFourierTransformer();
-	/**
-	 * rotation angle estimated between candidate image and reference image
-	 */
-	private float angleCorrection = 0;
 
 	/**
-	 * compute cross power Spectrum
+	 * compute cross power Spectrum suppose that Ga and Gb have same size
+	 * (N1xN2)
 	 * 
 	 * @param Ga
 	 * @param Gb
@@ -42,250 +39,169 @@ public class Matcher {
 
 		int Ga_width = Ga.length;
 		int Ga_height = Ga[0].length;
-		int Gb_width = Gb.length;
-		int Gb_height = Gb[0].length;
 
-		Complex[][] R = new Complex[Ga_width][Gb_height];
+		Complex[][] R = new Complex[Ga_width][Ga_height];
 
 		for (int i = 0; i < Ga_width; i++) {
 			for (int j = 0; j < Ga_height; j++) {
-				Complex tempo = new Complex(0, 0);
-				for (int k = 0; k < Gb_width; k++) {
-					tempo = tempo.add(Ga[i][k].multiply(Gb[k][j].conjugate()));
-				}
-				
-				if (tempo.abs() > 0) {
-					R[i][j] = tempo.multiply(1 / tempo.abs());
-				} else {
-					R[i][j] = tempo;
-				}
+				Complex tempo = Ga[i][j].multiply(Gb[i][j].conjugate());
+				R[i][j] = (0L != tempo.abs()) ? tempo.multiply(1L / tempo
+						.abs()) : tempo;
+			}
+		}
+		return R;
+	}
+
+	/**
+	 * main method computing a score (probability that candidate image matches
+	 * against reference image
+	 * 
+	 * @param reference
+	 * @param candidate
+	 * @return
+	 */
+	public double match(final double[][] reference, final double[][] candidate) {
+		/**
+		 * Step 1: create a Complex[][] matrix, where real part is reference,
+		 * and imaginary part for candidate
+		 */
+
+		int N1 = reference.length;
+		int N2 = reference.length;
+		logger.info("width=" + N1 + " height=" + N2);
+		//we suppose images with same size 
+		Complex[][] F= this.get2D_DFT(reference);
+		Complex[][] G= this.get2D_DFT(candidate);
+		Complex[][] R= getCrossPhaseSpectrum(F,G);
+		Complex[][] POC = this.get2D_IDFT(R, N1, N2);
+		Point2D peak = this.getPeak(POC);
+		Complex score = POC[(int) peak.getX()][(int) peak.getY()];
+		return score.getReal(); 
+	}
+	
+	/**
+	 * compute cross phase normalized
+	 * @param F
+	 * @param G
+	 * @return
+	 */
+	public Complex[][] getCrossPhaseSpectrum(final Complex[][] F, final Complex[][] G){
+		int N1 = F.length;
+		int N2 = F[0].length;
+		
+		Complex[][] R = new Complex[N1][N2];
+		
+		for (int k1=0;k1<N1;k1++){
+			for (int k2=0;k2<N2;k2++){
+				Complex tempo = F[k1][k2].multiply(G[k1][k2].conjugate());
+				R[k1][k2]=(tempo.abs()>0)?tempo.multiply(1L/tempo.abs()):tempo;
 			}
 		}
 		return R;
 	}
 	
-	/**
-	 * main method computing a score (probability that candidate image matches
-	 * against reference image
-	 * 
-	 * @param reference
-	 * @param candidate
-	 * @return
-	 */
-	public double match(final double[][] reference,final double[][] candidate){
-		/**
-		 * Step 1: create a Complex[][] matrix, where real part
-		 * is reference, and imaginary part for candidate
-		 */
+	public Complex getDFT(final double[][] f,final int k1,final int k2){
+		int N1 = f.length;
+		int N2 = f[0].length;
+		Complex F=new Complex(0,0);
 		
-		
-		int width = reference.length;
-		int height = reference.length;	
-		logger.info("width="+width+" height="+height);
-		
-		Complex[][] image1 = new Complex[width][height];				
-		for (int i=0;i<width;i++){
-			for(int j=0;j<height;j++){
-				logger.info("adding ["+i+"]["+j+"] ="+reference[i][j]);
-				image1[i][j] = new Complex(reference[i][j],0);				
+		for (int n1=0;n1<N1;n1++){
+			for(int n2=0;n2<N2;n2++){				
+				double a1=-2*Math.PI*k1*n1/N1; 
+				double a2=-2*Math.PI*k2*n2/N2;
+				Complex W1 = new Complex(Math.cos(a1),Math.sin(a1));
+				Complex W2 = new Complex(Math.cos(a2),Math.sin(a2));
+				 F.add(W1.multiply(W2).multiply(f[n1][n2]));
 			}
 		}
-		
-		width = candidate.length;
-		height = candidate.length;		
-		Complex[][] image2 = new Complex[width][height];				
-		for (int i=0;i<width;i++){
-			for(int j=0;j<height;j++){
-				image2[i][j] = new Complex(candidate[i][j],0);				
-			}
-		}
-		
-		
-		/**
-		 * compute FFT
-		 */
-		Complex[][] Fimage1 = getFFT(image1);
-		Complex[][] Fimage2 = getFFT(image2);
-							
-		/**
-		 * 
-		 */
-		
-		return computeSpectrum(Fimage1, Fimage2);
-	}
-
-	/**
-	 * main method computing a score (probability that candidate image matches
-	 * against reference image
-	 * 
-	 * @param reference
-	 * @param candidate
-	 * @return
-	 */
-	public double match(final Complex[][] reference, final Complex[][] candidate) {
-
-				
-		/**
-		 * Step 1: compute FFT
-		 */
-		Complex[][] Fimage1 = getFFT(reference);
-		Complex[][] Fimage2 = getFFT(candidate);
-
-		return computeSpectrum(Fimage1, Fimage2);
-	}
-
-	/**
-	 * @param Fimage1
-	 * @param Fimage2
-	 * @return
-	 */
-	public double computeSpectrum(Complex[][] Fimage1, Complex[][] Fimage2) {
-		/**
-		 * Step 1.1 : calculate the cross-power spectrum by taking the complex
-		 * conjugate of the second result, multiplying the Fourier transforms
-		 * together elementwise, and normalizing this product elementwise.
-		 */
-
-		Complex[][] crossPowerSpectrum = getCrossPowerSpectrum(Fimage1, Fimage2);
-
-		/**
-		 * Step 1.2 Obtain the normalized cross-correlation by applying the
-		 * inverse Fourier transform
-		 */
-
-		Complex[][] crossCorrelation=getFFTInverse(crossPowerSpectrum);
-		
-		
-		/**
-		 * Step 1.3 get peak
-		 */
-		
-		Point2D max = getPeak(crossCorrelation);
-		
-		double matchingScore = crossCorrelation[(int) max.getX()][(int) max.getY()].getReal();
-		
-		logger.info(" max found (" + max.getX() +";" + max.getY()+") ="+matchingScore);		
-		
-		/**
-		 * Setp 2: highpass filter
-		 */
-
-		/**
-		 * Step 3: Log polar conversion
-		 */
-
-		/**
-		 * Step 4: correlation Phase get angle Rotation between both images get
-		 * scale difference between both images
-		 */
-
-		/**
-		 * Step 5: Transformation
-		 */
-
-		/**
-		 * Step 6: Translation
-		 */
-		return (matchingScore * 100.0);
-	}
-
-	/**
-	 * return x,y as Point2D.Double 
-	 * max value
-	 * @param data
-	 * @return
-	 */
-	public Point2D getPeak(final Complex[][] data){
-		
-		int xMax=0;
-		int yMax = 0;
-		double max = data[xMax][yMax].getReal();
-		
-		for (int i=0;i<data.length;i++){
-			for (int j=0;j<data[0].length;j++) {
-				if ( max<data[i][j].getReal()){
-					max = data[i][j].getReal();
-					xMax=i;
-					yMax=j;
-				}
-			}
-		}
-		
-		Point2D p=new Point2D.Double();
-		p.setLocation(xMax, yMax);		
-		return p;
-	}
-	/**
-	 * compute matchingScore from convolvedImage
-	 * 
-	 * @param matchingScore
-	 * @param convolvedImage
-	 * @return
-	 */
-	public int getMatchingScore(final Complex[][] convolvedImage) {
-		int matchingScore = 0;
-		// FIXME: method used to compute score does not reflect reality
-		// we expect a great score when HIT, and 0 if no HIT
-		// same thing with rotation
-		for (int j = 0; j < convolvedImage[0].length; j++) {
-			for (int i = 0; i < convolvedImage.length; i++) {
-				matchingScore += convolvedImage[i][j].getReal();
-			}
-		}
-		return matchingScore;
-	}
-
-	/**
-	 * return FFT of data
-	 * 
-	 * @param data
-	 * @return
-	 */
-	public Complex[][] getFFT(final Complex[][] data) {
-		
-		Complex[][] dataComplete = complete(data);
-		return (Complex[][]) FFT.mdfft(dataComplete, true);
+		return F;
 	}
 	
 	/**
-	 * return inverse fourier transform
+	 * compute 2D DFT
+	 * @param f
+	 * @return
+	 */
+	public Complex[][] get2D_DFT(final double[][] f){
+		int N1 = f.length;
+		int N2 = f[0].length;
+		Complex[][] F= new Complex[N1][N2];
+		
+		for (int k1=0;k1<N1;k1++){
+			for(int k2=0;k2<N2;k2++){
+				F[k1][k2] = this.getDFT(f,k1,k2);
+			}
+		}
+		return F;
+	}
+
+	
+	public Complex getIDFT(final Complex[][] R, final int n1, final int n2){
+		int N1 = R.length;
+		int N2 = R[0].length;
+		Complex r=new Complex(0,0);
+		
+		for (int k1=0;k1<N1;k1++){
+			for(int k2=0;k2<N2;k2++){				
+				double a1=2*Math.PI*k1*n1/N1; 
+				double a2=2*Math.PI*k2*n2/N2;
+				Complex W1 = new Complex(Math.cos(a1),Math.sin(a1));
+				Complex W2 = new Complex(Math.cos(a2),Math.sin(a2));
+				 r.add(W1.multiply(W2).multiply(R[k1][k2]));
+			}
+		}
+		return r.multiply(1L/(N1*N2));
+		
+	}
+	
+	/**
+	 * compute Inverse Discrete Fourier
+	 * @param R
+	 * @param N1
+	 * @param N2
+	 * @return
+	 */
+	public Complex[][] get2D_IDFT(final Complex[][] R,final int N1, final int N2){
+		Complex[][] r=new Complex[N1][N2];
+		for (int k1=0;k1<N1;k1++){
+			for(int k2=0;k2<N2;k2++){
+				r[k1][k2] = this.getIDFT(R,k1,k2);				
+			}
+		}
+		return r;
+	}
+	
+	
+	
+	
+
+	/**
+	 * return x,y as Point2D.Double max value
+	 * 
 	 * @param data
 	 * @return
 	 */
-	public Complex[][] getFFTInverse(final Complex[][] data){
-		return (Complex[][]) FFT.mdfft(data, false);
-	}
+	public Point2D getPeak(final Complex[][] data) {
 
-	/**
-	 * complete if necessary an array with 0 to be sure that array size will be
-	 * a power of 2
-	 * 
-	 * @param data
-	 * @return new array completed
-	 */
-	public Complex[][] complete(final Complex[][] data) {
-		int width = data.length;
-		int height = data[0].length;
+		int xMax = 0;
+		int yMax = 0;
+		double max = data[xMax][yMax].getReal();
 
-		int newWidth = (int) nearestSuperiorPow2(width);
-		int newHeight = (int) nearestSuperiorPow2(height);
-
-		Complex[][] newData = new Complex[newWidth][newHeight];
-		
-		for (int i = 0;i<newWidth;i++){
-			for (int j= 0;j<newHeight;j++){
-				Complex tempo=new Complex(0,0);
-				
-				if (i<width && j<height){
-					tempo=data[i][j];
+		for (int i = 0; i < data.length; i++) {
+			for (int j = 0; j < data[0].length; j++) {
+				if (max < data[i][j].getReal()) {
+					max = data[i][j].getReal();
+					xMax = i;
+					yMax = j;
 				}
-				
-				newData[i][j] = tempo;
 			}
 		}
-		return newData;
-	}
 
+		Point2D p = new Point2D.Double();
+		p.setLocation(xMax, yMax);
+		return p;
+	}
+	
 	/**
 	 * check if a number is power of 2
 	 * 

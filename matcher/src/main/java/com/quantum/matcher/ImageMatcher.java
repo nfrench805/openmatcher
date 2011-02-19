@@ -35,22 +35,21 @@ public class ImageMatcher {
 		int width = imageReference.getWidth();
 		int height = imageReference.getHeight();
 		
-		Complex[][] imgRef = new Complex[width][height];
+		double[][] imgRef = new double[width][height];
 		for (int x=0;x<width;x++){
 			for (int y=0;y<height;y++){
-				imgRef[x][y] = new Complex(imageReference.getRGB(x, y) & 0xff,0);
+				imgRef[x][y] = imageReference.getRGB(x, y) & 0xff;
 			}
 		}
 		
 		width = imageCandidate.getWidth();
 		height = imageCandidate.getHeight();
-		Complex[][] imgCand = new Complex[width][height];
+		double[][] imgCand = new double[width][height];
 		for (int x=0;x<width;x++){
 			for (int y=0;y<height;y++){
-				imgRef[x][y] = new Complex(imageCandidate.getRGB(x, y) & 0xff,0);
+				imgRef[x][y] = imageCandidate.getRGB(x, y) & 0xff;
 			}
-		}
-		
+		}		
 		return matcher.match(imgRef, imgCand);		
 	}
 	
