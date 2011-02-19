@@ -1,16 +1,28 @@
 package com.quantum.algorithms.fourier;
 
+import java.awt.geom.Point2D;
+
 import org.apache.commons.math.complex.Complex;
 
 public class DFTMatcher extends GenericMatcher implements IMatcher {
 
-	
 	public double match(double[][] reference, double[][] candidate) {
-		// TODO Auto-generated method stub
-		return 0;
+		int N1 = reference.length;
+		int N2 = reference[0].length;
+		
+		logger.info("width=" + N1 + " height=" + N2);
+		// we suppose images with same size
+		Complex[][] F = get2D_DFT(reference);
+		Complex[][] G = get2D_DFT(candidate);
+		Complex[][] R = getCrossPhaseSpectrum(F, G);
+		Complex[][] POC = get2D_IDFT(R, N1, N2);
+		Point2D peak = getPeak(POC);
+		Complex score = POC[(int) peak.getX()][(int) peak.getY()];
+		return score.getReal();
 	}
 
-	
+	private final double PI_X_2 = 2 * Math.PI;
+
 	/**
 	 * Compute DFT element(k1,k2) of f(k1,k2)
 	 * 
@@ -26,11 +38,7 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 
 		for (int n1 = 0; n1 < N1; n1++) {
 			for (int n2 = 0; n2 < N2; n2++) {
-				double a1 = -2 * Math.PI * k1 * n1 / N1;
-				double a2 = -2 * Math.PI * k2 * n2 / N2;
-				Complex W1 = new Complex(Math.cos(a1), Math.sin(a1));
-				Complex W2 = new Complex(Math.cos(a2), Math.sin(a2));
-				F = F.add(W1.multiply(W2).multiply(f[n1][n2]));
+				F=F.add(new Complex(0,-PI_X_2 * (k1*n1/N1 + k2*n2/N2)).exp().multiply(f[n1][n2]));
 			}
 		}
 		return F;
@@ -68,11 +76,7 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 
 		for (int k1 = 0; k1 < N1; k1++) {
 			for (int k2 = 0; k2 < N2; k2++) {
-				double a1 = 2 * Math.PI * k1 * n1 / N1;
-				double a2 = 2 * Math.PI * k2 * n2 / N2;
-				Complex W1 = new Complex(Math.cos(a1), Math.sin(a1));
-				Complex W2 = new Complex(Math.cos(a2), Math.sin(a2));
-				r = r.add(W1.multiply(W2).multiply(R[k1][k2]));
+				r=r.add((new Complex(0,PI_X_2 * (k1*n1/N1 + k2*n2/N2)).exp()).multiply(R[k1][k2]));
 			}
 		}
 		return r.multiply(1L / (N1 * N2));
@@ -87,7 +91,7 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		Complex[][] r = new Complex[N1][N2];
 		for (int k1 = 0; k1 < N1; k1++) {
 			for (int k2 = 0; k2 < N2; k2++) {
-				r[k1][k2] = this.getIDFT(R, k1, k2);
+				r[k1][k2] = getIDFT(R, k1, k2);
 			}
 		}
 		return r;
