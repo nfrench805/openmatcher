@@ -16,7 +16,8 @@ import javax.swing.JLabel;
 
 import org.apache.commons.math.complex.Complex;
 
-import com.quantum.algorithms.fourier.Matcher;
+import com.quantum.algorithms.fourier.IMatcher;
+import com.quantum.algorithms.fourier.FFTMatcher;
 
 /**
  * @author Pascal Dergane
@@ -24,7 +25,7 @@ import com.quantum.algorithms.fourier.Matcher;
  */
 public class ImageMatcher {
 	
-	private Matcher matcher=new Matcher();
+	private IMatcher matcher=new FFTMatcher();
 
 	public double match(final InputStream reference, final InputStream candidate)
 			throws IOException {

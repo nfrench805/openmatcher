@@ -20,7 +20,7 @@ import org.junit.Test;
  */
 public class MatcherTest extends TestCase {
 
-	private Matcher matcher = new Matcher();
+	private IMatcher matcher = new FFTMatcher();
 	private Logger logger = Logger.getLogger(MatcherTest.class.getName());
 	private final int size = 512;
 
