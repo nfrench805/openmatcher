@@ -1,59 +1,96 @@
 package com.quantum.algorithms.fourier;
 
-import java.awt.geom.Point2D;
-
 import org.apache.commons.math.complex.Complex;
 
-public class DFTMatcher implements IMatcher {
+public class DFTMatcher extends GenericMatcher implements IMatcher {
 
-	public Complex[][] getCrossPowerSpectrum(Complex[][] Ga, Complex[][] Gb) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 	public double match(double[][] reference, double[][] candidate) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
-	public Complex[][] getCrossPhaseSpectrum(Complex[][] F, Complex[][] G) {
-		// TODO Auto-generated method stub
-		return null;
+	
+	/**
+	 * Compute DFT element(k1,k2) of f(k1,k2)
+	 * 
+	 * @param f
+	 * @param k1
+	 * @param k2
+	 * @return
+	 */
+	public Complex getDFT(final double[][] f, final int k1, final int k2) {
+		int N1 = f.length;
+		int N2 = f[0].length;
+		Complex F = new Complex(0, 0);
+
+		for (int n1 = 0; n1 < N1; n1++) {
+			for (int n2 = 0; n2 < N2; n2++) {
+				double a1 = -2 * Math.PI * k1 * n1 / N1;
+				double a2 = -2 * Math.PI * k2 * n2 / N2;
+				Complex W1 = new Complex(Math.cos(a1), Math.sin(a1));
+				Complex W2 = new Complex(Math.cos(a2), Math.sin(a2));
+				F = F.add(W1.multiply(W2).multiply(f[n1][n2]));
+			}
+		}
+		return F;
 	}
 
-	public Complex getDFT(double[][] f, int k1, int k2) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * compute DFT of f using normal DFT method return an array type of
+	 * Complex[][]
+	 */
+	public Complex[][] get2D_DFT(final double[][] f) {
+		int N1 = f.length;
+		int N2 = f[0].length;
+		Complex[][] F = new Complex[N1][N2];
+
+		for (int k1 = 0; k1 < N1; k1++) {
+			for (int k2 = 0; k2 < N2; k2++) {
+				F[k1][k2] = this.getDFT(f, k1, k2);
+			}
+		}
+		return F;
 	}
 
-	public Complex[][] get2D_DFT(double[][] f) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * compute and return normalized IDFT element (n1,n2) of R(n1,n2)
+	 * 
+	 * @param R
+	 * @param n1
+	 * @param n2
+	 * @return
+	 */
+	public Complex getIDFT(final Complex[][] R, final int n1, final int n2) {
+		int N1 = R.length;
+		int N2 = R[0].length;
+		Complex r = new Complex(0, 0);
+
+		for (int k1 = 0; k1 < N1; k1++) {
+			for (int k2 = 0; k2 < N2; k2++) {
+				double a1 = 2 * Math.PI * k1 * n1 / N1;
+				double a2 = 2 * Math.PI * k2 * n2 / N2;
+				Complex W1 = new Complex(Math.cos(a1), Math.sin(a1));
+				Complex W2 = new Complex(Math.cos(a2), Math.sin(a2));
+				r = r.add(W1.multiply(W2).multiply(R[k1][k2]));
+			}
+		}
+		return r.multiply(1L / (N1 * N2));
+
 	}
 
-	public Complex getIDFT(Complex[][] R, int n1, int n2) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Complex[][] get2D_IDFT(Complex[][] R, int N1, int N2) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Point2D getPeak(Complex[][] data) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public boolean isPowerOf2(long number) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	public long nearestSuperiorPow2(long i) {
-		// TODO Auto-generated method stub
-		return 0;
+	/**
+	 * compute IDFT using normal method
+	 */
+	public Complex[][] get2D_IDFT(final Complex[][] R, final int N1,
+			final int N2) {
+		Complex[][] r = new Complex[N1][N2];
+		for (int k1 = 0; k1 < N1; k1++) {
+			for (int k2 = 0; k2 < N2; k2++) {
+				r[k1][k2] = this.getIDFT(R, k1, k2);
+			}
+		}
+		return r;
 	}
 
 }

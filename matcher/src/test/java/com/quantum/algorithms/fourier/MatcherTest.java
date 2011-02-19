@@ -57,18 +57,18 @@ public class MatcherTest extends TestCase {
 	 */
 	@Test
 	public void testPowerOf2() {
-		assertFalse(matcher.isPowerOf2(0));
-		assertFalse(matcher.isPowerOf2(10));
-		assertTrue(matcher.isPowerOf2(8));
-		assertFalse(matcher.isPowerOf2(922337203685477580L));
+		assertFalse(((GenericMatcher)matcher).isPowerOf2(0));
+		assertFalse(((GenericMatcher)matcher).isPowerOf2(10));
+		assertTrue(((GenericMatcher)matcher).isPowerOf2(8));
+		assertFalse(((GenericMatcher)matcher).isPowerOf2(922337203685477580L));
 	}
 
 	@Test
 	public void testNearestPowerOf2() {
-		assertEquals(2, matcher.nearestSuperiorPow2(0));
-		assertEquals(2, matcher.nearestSuperiorPow2(2));
-		assertEquals(8, matcher.nearestSuperiorPow2(7));
-		assertEquals(1024, matcher.nearestSuperiorPow2(999));
+		assertEquals(2, ((GenericMatcher)matcher).nearestSuperiorPow2(0));
+		assertEquals(2, ((GenericMatcher)matcher).nearestSuperiorPow2(2));
+		assertEquals(8, ((GenericMatcher)matcher).nearestSuperiorPow2(7));
+		assertEquals(1024, ((GenericMatcher)matcher).nearestSuperiorPow2(999));
 
 	}
 	
