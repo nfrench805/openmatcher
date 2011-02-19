@@ -15,25 +15,18 @@ import org.apache.commons.math.transform.FastFourierTransformer;
  *         B.N.Chatterji, 1996
  * 
  */
-public class Matcher {
-	/**
-	 * logger to get more information during execution
-	 */
-	private Logger logger = Logger.getLogger(Matcher.class.getName());
+public class FFTMatcher extends GenericMatcher {
+	
 	/**
 	 * pointer on Fouirer Transformer (object allowing to compute FFT, and
 	 * reverseFFT
 	 */
 	private FastFourierTransformer FFT = new FastFourierTransformer();
 
-	/**
-	 * compute cross power Spectrum suppose that Ga and Gb have same size
-	 * (N1xN2)
-	 * 
-	 * @param Ga
-	 * @param Gb
-	 * @return
+	/* (non-Javadoc)
+	 * @see com.quantum.algorithms.fourier.IMatcher#getCrossPowerSpectrum(org.apache.commons.math.complex.Complex[][], org.apache.commons.math.complex.Complex[][])
 	 */
+	@Override
 	public Complex[][] getCrossPowerSpectrum(final Complex[][] Ga,
 			final Complex[][] Gb) {
 
@@ -52,13 +45,8 @@ public class Matcher {
 		return R;
 	}
 
-	/**
-	 * main method computing a score (probability that candidate image matches
-	 * against reference image
-	 * 
-	 * @param reference
-	 * @param candidate
-	 * @return
+	/* (non-Javadoc)
+	 * @see com.quantum.algorithms.fourier.IMatcher#match(double[][], double[][])
 	 */
 	public double match(final double[][] reference, final double[][] candidate) {
 		/**
@@ -93,12 +81,8 @@ public class Matcher {
 		return score.getReal();
 	}
 
-	/**
-	 * compute cross phase normalized
-	 * 
-	 * @param F
-	 * @param G
-	 * @return
+	/* (non-Javadoc)
+	 * @see com.quantum.algorithms.fourier.IMatcher#getCrossPhaseSpectrum(org.apache.commons.math.complex.Complex[][], org.apache.commons.math.complex.Complex[][])
 	 */
 	public Complex[][] getCrossPhaseSpectrum(final Complex[][] F,
 			final Complex[][] G) {
@@ -117,6 +101,9 @@ public class Matcher {
 		return R;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.quantum.algorithms.fourier.IMatcher#getDFT(double[][], int, int)
+	 */
 	public Complex getDFT(final double[][] f, final int k1, final int k2) {
 		int N1 = f.length;
 		int N2 = f[0].length;
@@ -134,11 +121,8 @@ public class Matcher {
 		return F;
 	}
 
-	/**
-	 * compute 2D DFT
-	 * 
-	 * @param f
-	 * @return
+	/* (non-Javadoc)
+	 * @see com.quantum.algorithms.fourier.IMatcher#get2D_DFT(double[][])
 	 */
 	public Complex[][] get2D_DFT(final double[][] f) {
 		int N1 = f.length;
@@ -162,6 +146,9 @@ public class Matcher {
 		return F;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.quantum.algorithms.fourier.IMatcher#getIDFT(org.apache.commons.math.complex.Complex[][], int, int)
+	 */
 	public Complex getIDFT(final Complex[][] R, final int n1, final int n2) {
 		int N1 = R.length;
 		int N2 = R[0].length;
@@ -180,13 +167,8 @@ public class Matcher {
 
 	}
 
-	/**
-	 * compute Inverse Discrete Fourier
-	 * 
-	 * @param R
-	 * @param N1
-	 * @param N2
-	 * @return
+	/* (non-Javadoc)
+	 * @see com.quantum.algorithms.fourier.IMatcher#get2D_IDFT(org.apache.commons.math.complex.Complex[][], int, int)
 	 */
 	public Complex[][] get2D_IDFT(final Complex[][] R, final int N1,
 			final int N2) {
@@ -207,54 +189,5 @@ public class Matcher {
 		return r;
 	}
 
-	/**
-	 * return x,y as Point2D.Double max value
-	 * 
-	 * @param data
-	 * @return
-	 */
-	public Point2D getPeak(final Complex[][] data) {
-
-		int xMax = 0;
-		int yMax = 0;
-		double max = data[xMax][yMax].getReal();
-		double average =0;
-		for (int i = 0; i < data.length; i++) {
-			for (int j = 0; j < data[0].length; j++) {
-				average+=data[i][j].getReal();
-				if (max < data[i][j].getReal()) {
-					max = data[i][j].getReal();
-					xMax = i;
-					yMax = j;
-				}
-			}
-		}
-
-		Point2D p = new Point2D.Double();
-		logger.info("Maximum found :" + max + " [" + xMax + "][" + yMax + "]");
-		logger.info("average ="+average/data.length/data[0].length);
-		p.setLocation(xMax, yMax);
-		return p;
-	}
-
-	/**
-	 * check if a number is power of 2
-	 * 
-	 * @param number
-	 * @return
-	 */
-	public boolean isPowerOf2(final long number) {
-		return FastFourierTransformer.isPowerOf2(number);
-	}
-
-	/**
-	 * return nearest power of 2
-	 * 
-	 * @param i
-	 * @return
-	 */
-	public long nearestSuperiorPow2(final long i) {
-		long x = i > 0 ? ((i - 1) & i) : 1;
-		return (!isPowerOf2(x)) ? nearestSuperiorPow2(x) : x << 1;
-	}
+	
 }
