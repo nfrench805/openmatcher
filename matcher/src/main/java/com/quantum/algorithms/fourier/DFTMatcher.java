@@ -1,6 +1,9 @@
 package com.quantum.algorithms.fourier;
 
 import java.awt.geom.Point2D;
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.math.complex.Complex;
 
@@ -11,6 +14,7 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		int N2 = reference[0].length;
 		
 		logger.info("width=" + N1 + " height=" + N2);
+		initialize(N1,N2);
 		// we suppose images with same size
 		logger.info("computing DFT of reference...");
 		Complex[][] F = get2D_DFT(reference);
@@ -26,6 +30,35 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		return score.getReal();
 	}
 
+	
+	public void initialize(final int N1,final int N2){
+		logger.info("initializing...");
+		for (int k1=0;k1<N1;k1++){
+			double omega=this.PI_X_2 * k1 / N1;
+			for (int x1=0;x1<N1;x1++){
+				this.W_N1.put(BigInteger.valueOf(k1*x1), (new Complex(0,omega*x1)).exp());
+				if (k1*x1>0){
+					this.W_N1.put(BigInteger.valueOf(-k1*x1), (new Complex(0,-omega*x1)).exp());
+				}
+			}
+		}
+		
+		for (int k2=0;k2<N2;k2++){
+			double omega=this.PI_X_2 * k2 / N2;
+			for (int x2=0;x2<N2;x2++){
+				this.W_N2.put(BigInteger.valueOf(k2*x2), (new Complex(0,-omega*x2)).exp());
+				if (k2*x2>0){
+					this.W_N2.put(BigInteger.valueOf(-k2*x2), (new Complex(0,-omega*x2)).exp());
+				}
+			}
+		}
+		logger.info("initializing done...");
+	}
+	
+	
+	private Map<java.math.BigInteger,Complex> W_N1 = new HashMap<java.math.BigInteger,Complex>();
+	private Map<java.math.BigInteger,Complex> W_N2 = new HashMap<java.math.BigInteger,Complex>();
+	
 	private final double PI_X_2 = 2 * Math.PI;
 
 	/**
@@ -39,11 +72,16 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 	public Complex getDFT(final double[][] f, final int k1, final int k2) {
 		int N1 = f.length;
 		int N2 = f[0].length;
-		Complex F = new Complex(0, 0);
+		Complex F=new Complex(0,0);
 
 		for (int n1 = 0; n1 < N1; n1++) {
 			for (int n2 = 0; n2 < N2; n2++) {
-				F=F.add(new Complex(0,-PI_X_2 * (k1*n1/N1 + k2*n2/N2)).exp().multiply(f[n1][n2]));
+				logger.info("k1="+k1+" n1="+n1+" k2="+k2+" n2="+n2);
+				if (n1*k1>0 && n2*k2>0) {
+					F=F.add(this.W_N1.get(-n1*k1).multiply(this.W_N2.get(-n2*k2)).multiply(f[n1][n2]));
+				}else{
+					F=this.W_N1.get(0).multiply(this.W_N2.get(0)).multiply(f[n1][n2]);
+				}
 			}
 		}
 		return F;
@@ -80,8 +118,8 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		Complex r = new Complex(0, 0);
 
 		for (int k1 = 0; k1 < N1; k1++) {
-			for (int k2 = 0; k2 < N2; k2++) {
-				r=r.add((new Complex(0,PI_X_2 * (k1*n1/N1 + k2*n2/N2)).exp()).multiply(R[k1][k2]));
+			for (int k2 = 0; k2 < N2; k2++) {				
+				r=r.add(this.W_N1.get(n1*k1).multiply(this.W_N2.get(n2*k2)).multiply(R[k1][k2]));
 			}
 		}
 		return r.multiply(1L / (N1 * N2));
