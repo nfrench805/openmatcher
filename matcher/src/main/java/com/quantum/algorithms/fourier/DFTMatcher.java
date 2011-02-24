@@ -28,7 +28,7 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		logger.info("looking for a peak in POC...");
 		Point2D peak = getPeak(POC);
 		Complex score = POC[(int) peak.getX()][(int) peak.getY()];
-		return score.getReal()/N1/N2;
+		return score.getReal();
 	}
 	
 	/**
@@ -46,8 +46,10 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 
 		for (int n1 = -N1 / 2; n1 < N1 / 2; n1++) {
 			for (int n2 = -N2 / 2; n2 < N2 / 2; n2++) {
-				Complex W1 = new Complex(0, -2 * Math.PI * k1 * n1 / N1);
-				Complex W2 = new Complex(0, -2 * Math.PI * k2 * n2 / N2);
+				double theta1 = 2 * Math.PI * k1 * n1 / N1;
+				double theta2 = 2 * Math.PI * k2 * n2 / N2;
+				Complex W1 = new Complex(Math.cos(theta1), -Math.sin(theta1));
+				Complex W2 = new Complex(Math.cos(theta2), -Math.sin(theta2));
 
 				F = F.add(W1.multiply(W2).multiply(f[n1 + N1 / 2][n2 + N2 / 2]));
 
@@ -94,15 +96,17 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 
 		for (int k1 = -N1 / 2; k1 < N1 / 2; k1++) {
 			for (int k2 = -N2 / 2; k2 < N2 / 2; k2++) {
-				Complex W1 = new Complex(0, 2 * Math.PI * k1 * n1 / N1);
-				Complex W2 = new Complex(0, 2 * Math.PI * k2 * n2 / N2);
-
+				double theta1 = 2 * Math.PI * k1 * n1 / N1;
+				double theta2 = 2 * Math.PI * k2 * n2 / N2;
+				Complex W1 = new Complex(Math.cos(theta1), Math.sin(theta1));
+				Complex W2 = new Complex(Math.cos(theta2), Math.sin(theta2));
 				r = r.add(W1.multiply(W2).multiply(R[k1 + N1 / 2][k2 + N2 / 2]));
 
 			}
 		}
 
-		return r;
+		return r.divide(new Complex(N1*N2,0));
+		
 	}
 
 	/**
