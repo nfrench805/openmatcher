@@ -14,7 +14,7 @@ public class DFTMatcherTest extends TestCase {
 
 	private IMatcher matcher = new DFTMatcher();
 	private Logger logger = Logger.getLogger(FFTMatcherTest.class.getName());
-	private final int size = 512;
+	private final int size = 64;
 
 	/**
 	 * @throws Exception
@@ -108,7 +108,7 @@ public class DFTMatcherTest extends TestCase {
 
 		double score = matcher.match(f, g);
 		logger.info("score=" + score);
-		assertTrue(score > 0.9);
+		assertTrue(score > 0.8);
 
 	}
 
