@@ -64,23 +64,17 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 	 * @param k2
 	 * @return
 	 */
-	public Complex getDFT(final double[][] f, final int k1, final int k2) {
+	@Deprecated
+	public Complex getFastDFT(final double[][] f, final int k1, final int k2) {
 		int N1 = f.length;
 		int N2 = f[0].length;
 		Complex F = new Complex(f[N1 / 2][N2 / 2], 0);
-		Complex W1 = this.W1.get(Integer.valueOf(-k1 * N1 / 2)).conjugate();
-		Complex W2 = this.W2.get(Integer.valueOf(-k2 * N2 / 2)).conjugate();
-		F = F.add(W1.multiply(W2).multiply(f[0][0]));
+		Complex W1;
+		Complex W2;
 
 		for (int n1 = 0; n1 < N1 / 2; n1++) {
 			for (int n2 = 0; n2 < N2 / 2; n2++) {
 
-				// double theta1 = 2 * Math.PI * k1 * n1 / N1;
-				// double theta2 = 2 * Math.PI * k2 * n2 / N2;
-				// Complex W1 = new Complex(Math.cos(theta1),
-				// -Math.sin(theta1));
-				// Complex W2 = new Complex(Math.cos(theta2),
-				// -Math.sin(theta2));
 				W1 = this.W1.get(Integer.valueOf(k1 * n1)).conjugate();
 				W2 = this.W2.get(Integer.valueOf(k2 * n2)).conjugate();
 
@@ -98,8 +92,36 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 						.multiply(f[-n1 + N1 / 2][-n2 + N2 / 2]);
 				F = (n1 == 0 && n2 == 0) ? F : F.add(a).add(b).add(c).add(d);
 			}
+
 		}
 
+		int n1 = -N1 / 2;
+		W1 = this.W1.get(Integer.valueOf(k1 * n1)).conjugate();
+		for (int n2 = -N2 / 2; n2 < N2 / 2; n2++) {
+			W2 = this.W2.get(Integer.valueOf(k2 * n2)).conjugate();
+			F = F.add(W1.multiply(W2).multiply(f[0][n2 + N2 / 2]));
+		}
+
+		return F;
+	}
+
+	public Complex getDFT(final double[][] f, final int k1, final int k2) {
+		int N1 = f.length;
+		int N2 = f[0].length;
+		Complex F = new Complex(0, 0);
+		Complex W1;
+		Complex W2;
+
+		for (int n1 = -N1 / 2; n1 < N1 / 2; n1++) {
+			for (int n2 = -N2 / 2; n2 < N2 / 2; n2++) {
+
+				W1 = this.W1.get(Integer.valueOf(k1 * n1)).conjugate();
+				W2 = this.W2.get(Integer.valueOf(k2 * n2)).conjugate();
+
+				F = F.add(W1.multiply(W2).multiply(f[n1 + N1 / 2][n2 + N2 / 2]));
+			}
+
+		}		
 		return F;
 	}
 
@@ -133,39 +155,78 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 	 * @param n2
 	 * @return
 	 */
-	public Complex getIDFT(final Complex[][] R, final int n1, final int n2) {
+	@Deprecated
+	public Complex getFastIDFT(final Complex[][] R, final int n1, final int n2) {
 		int N1 = R.length;
 		int N2 = R[0].length;
 		Complex r = R[N1 / 2][N2 / 2];
-		Complex W1 = this.W1.get(Integer.valueOf(n1 * N1 / 2));
-		Complex W2 = this.W2.get(Integer.valueOf(n2 * N2 / 2));
-		r = r.add(W1.multiply(W2).add(R[0][0]));
 
-		for (int k1 = 0; k1 < N1 / 2; k1++) {
-			for (int k2 = 0; k2 < N2 / 2; k2++) {
+		Complex W1;
+		Complex W2;
+
+		for (int k1 = 0; k1 <= N1 / 2; k1++) {
+			for (int k2 = 0; k2 <= N2 / 2; k2++) {
 
 				W1 = this.W1.get(Integer.valueOf(k1 * n1));
 				W2 = this.W2.get(Integer.valueOf(k2 * n2));
 
 				// k1>0 && k2>0
-				Complex a = W1.multiply(W2).multiply(
-						R[k1 + N1 / 2][k2 + N2 / 2]);
+				Complex a = (k1 != N1 / 2 && k2 != N2 / 2) ? W1.multiply(W2)
+						.multiply(R[k1 + N1 / 2][k2 + N2 / 2]) : new Complex(0,
+						0);
 				// k1>0 && k2<0
-				Complex b = W1.multiply(W2.conjugate()).multiply(
-						R[k1 + N1 / 2][-k2 + N2 / 2]);
+				Complex b = (k1 != N1 / 2) ? W1.multiply(W2.conjugate())
+						.multiply(R[k1 + N1 / 2][-k2 + N2 / 2]) : new Complex(
+						0, 0);
 				// k1<0 && k2>0
-				Complex c = W1.conjugate().multiply(W2)
-						.multiply(R[-k1 + N1 / 2][k2 + N2 / 2]);
+				Complex c = (k2 != N2 / 2) ? W1.conjugate().multiply(W2)
+						.multiply(R[-k1 + N1 / 2][k2 + N2 / 2]) : new Complex(
+						0, 0);
 				// k1<0 && k2<0
 				Complex d = W1.multiply(W2).conjugate()
 						.multiply(R[-k1 + N1 / 2][-k2 + N2 / 2]);
+
 				r = (k1 == 0 && k2 == 0) ? r : r.add(a).add(b).add(c).add(d);
 
 			}
 		}
 
+		int k1 = -N1 / 2;
+		W1 = this.W1.get(Integer.valueOf(k1 * n1));
+		for (int k2 = -N2 / 2; k2 < N2 / 2; k2++) {
+			W2 = this.W2.get(Integer.valueOf(k2 * n2));
+			r = r.add(W1.multiply(W2).multiply(R[0][n2 + N2 / 2]));
+		}
+
 		return r.divide(new Complex(N1 * N2, 0));
 
+	}
+
+	public Complex getIDFT(final Complex[][] R, final int n1, final int n2) {
+		int N1 = R.length;
+		int N2 = R[0].length;
+		Complex r = new Complex(0, 0);
+
+		Complex W1;
+		Complex W2;
+
+		for (int k1 = -N1 / 2; k1 < N1 / 2; k1++) {
+			for (int k2 = -N1 / 2; k2 < N2 / 2; k2++) {
+
+				W1 = this.W1.get(Integer.valueOf(k1 * n1));
+				W2 = this.W2.get(Integer.valueOf(k2 * n2));
+				r = r.add(W1.multiply(W2).multiply(R[k1 + N1 / 2][k2 + N2 / 2]));
+			}
+		}
+
+		int k1 = -N1 / 2;
+		W1 = this.W1.get(Integer.valueOf(k1 * n1));
+		for (int k2 = -N2 / 2; k2 < N2 / 2; k2++) {
+			W2 = this.W2.get(Integer.valueOf(k2 * n2));
+			r = r.add(W1.multiply(W2).multiply(R[0][n2 + N2 / 2]));
+		}
+
+		return r.divide(new Complex(N1*N2,0));
 	}
 
 	/**
@@ -174,12 +235,51 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 	public Complex[][] get2D_IDFT(final Complex[][] R, final int N1,
 			final int N2) {
 		Complex[][] r = new Complex[N1][N2];
-		for (int n1 = -N1 / 2; n1 < N1 / 2; n1++) {
-			for (int n2 = -N2 / 2; n2 < N2 / 2; n2++) {
-				r[n1 + N1 / 2][n2 + N2 / 2] = getIDFT(R, n1, n2);
+
+		for (int k1 = -N1 / 2; k1 < N1 / 2; k1++) {
+			for (int k2 = -N2 / 2; k2 < N2 / 2; k2++) {
+				r[k1 + N1 / 2][k2 + N2 / 2] = this.getIDFT(R, k1, k2);
 			}
 		}
 		return r;
+	}
+
+	/**
+	 * compute dimension-1 DFT according with formulae F[k] = sum(n) { f[n] x
+	 * (cos(omega[k,n]) - j x sin(omega[k,n]) )/sqrt(N) where omega[n] = 2*PI/N
+	 * * k*n where -N/2<= n,k < +N/2 N is size of f
+	 **/
+	public Complex[] getDFT(Complex[] f) {
+		return transform(f, true);
+	}
+
+	public Complex[] transform(final Complex[] f, final boolean forward) {
+		// get nb items of serie f
+		int N = f.length;
+		double direction = forward ? 1L : -1L;
+
+		Complex[] result = new Complex[N];
+
+		for (int k = -N / 2; k < N / 2; k++) {
+			result[k] = new Complex(0, 0);
+			for (int n = -N / 2; n < N / 2; n++) {
+				double omega = 2 * Math.PI * k * n / N;
+				Complex W = new Complex(Math.cos(omega), direction
+						* Math.sin(omega));
+				result[k] = result[k].add(W.multiply(f[n]));
+			}
+			result[k] = result[k].divide(new Complex(Math.sqrt(N), 0));
+		}
+		return result;
+	}
+
+	/**
+	 * compute dimension-1 Inverse DFT according with formulae F[k] = sum(n) {
+	 * f[n] x (cos(omega[k,n]) + j x sin(omega[k,n]) )/sqrt(N) where omega[n] =
+	 * 2*PI/N * k*n where -N/2<= n,k < +N/2 N is size of f
+	 **/
+	public Complex[] getIDFT(Complex[] F) {
+		return transform(F, false);
 	}
 
 }

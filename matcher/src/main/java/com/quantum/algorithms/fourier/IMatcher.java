@@ -43,5 +43,19 @@ public interface IMatcher {
 	 */
 	public abstract Complex[][] get2D_IDFT(final Complex[][] R, final int N1,
 			final int N2);
+	
+	/**
+	 * compute DFT of dimension-1 complex vector
+	 * @param f
+	 * @return
+	 */
+	public abstract Complex[] getDFT(final Complex[] f);
+	
+	/**
+	 * compute Inverse DFT of dimension-1 complex vector
+	 * @param F
+	 * @return
+	 */
+	public abstract Complex[] getIDFT(final Complex[] F);
 
 }

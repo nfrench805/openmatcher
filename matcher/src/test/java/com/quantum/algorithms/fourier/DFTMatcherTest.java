@@ -14,7 +14,7 @@ public class DFTMatcherTest extends TestCase {
 
 	private IMatcher matcher = new DFTMatcher();
 	private Logger logger = Logger.getLogger(FFTMatcherTest.class.getName());
-	private final int size = 64;
+	private final int size = 32;
 
 	/**
 	 * @throws Exception
