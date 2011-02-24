@@ -96,4 +96,14 @@ public class FFTMatcher extends GenericMatcher implements IMatcher {
 		return r;
 	}
 
+	public Complex[] getDFT(Complex[] f) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Complex[] getIDFT(Complex[] F) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
