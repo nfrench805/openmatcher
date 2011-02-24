@@ -15,7 +15,7 @@ public class DFTMatcherTest  extends TestCase{
 	
 	private IMatcher matcher = new DFTMatcher();	
 	private Logger logger = Logger.getLogger(FFTMatcherTest.class.getName());
-	private final int size = 512;
+	private final int size = 32;
 
 	/**
 	 * @throws Exception
@@ -79,7 +79,7 @@ public class DFTMatcherTest  extends TestCase{
 		for (int i=0;i<size;i++){
 			for (int j=0;j<size;j++){
 				f[i][j]=(Math.random()*255);
-				g[i][j] = (Math.random()*255);
+				g[i][j] = 0;
 			}
 		}
 		

@@ -4,6 +4,7 @@ import java.awt.geom.Point2D;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 import org.apache.commons.math.complex.Complex;
 
@@ -12,9 +13,9 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 	public double match(double[][] reference, double[][] candidate) {
 		int N1 = reference.length;
 		int N2 = reference[0].length;
-		
+
 		logger.info("width=" + N1 + " height=" + N2);
-		initialize(N1,N2);
+		//initialize(N1, N2);
 		// we suppose images with same size
 		logger.info("computing DFT of reference...");
 		Complex[][] F = get2D_DFT(reference);
@@ -26,41 +27,10 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		Complex[][] POC = get2D_IDFT(R, N1, N2);
 		logger.info("looking for a peak in POC...");
 		Point2D peak = getPeak(POC);
-		Complex score = POC[(int) peak.getX()][(int) peak.getY()];		
-		return score.getReal();
-	}
-
-	
-	public void initialize(final int N1,final int N2){
-		logger.info("initializing...");
-		for (int k1=0;k1<N1;k1++){
-			double omega=this.PI_X_2 * k1 / N1;
-			for (int x1=0;x1<N1;x1++){
-				this.W_N1.put(BigInteger.valueOf(k1*x1), (new Complex(0,omega*x1)).exp());
-				if (k1*x1>0){
-					this.W_N1.put(BigInteger.valueOf(-k1*x1), (new Complex(0,-omega*x1)).exp());
-				}
-			}
-		}
-		
-		for (int k2=0;k2<N2;k2++){
-			double omega=this.PI_X_2 * k2 / N2;
-			for (int x2=0;x2<N2;x2++){
-				this.W_N2.put(BigInteger.valueOf(k2*x2), (new Complex(0,-omega*x2)).exp());
-				if (k2*x2>0){
-					this.W_N2.put(BigInteger.valueOf(-k2*x2), (new Complex(0,-omega*x2)).exp());
-				}
-			}
-		}
-		logger.info("initializing done...");
+		Complex score = POC[(int) peak.getX()][(int) peak.getY()];
+		return score.getReal()/N1/N2;
 	}
 	
-	
-	private Map<java.math.BigInteger,Complex> W_N1 = new HashMap<java.math.BigInteger,Complex>();
-	private Map<java.math.BigInteger,Complex> W_N2 = new HashMap<java.math.BigInteger,Complex>();
-	
-	private final double PI_X_2 = 2 * Math.PI;
-
 	/**
 	 * Compute DFT element(k1,k2) of f(k1,k2)
 	 * 
@@ -72,18 +42,18 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 	public Complex getDFT(final double[][] f, final int k1, final int k2) {
 		int N1 = f.length;
 		int N2 = f[0].length;
-		Complex F=new Complex(0,0);
+		Complex F = new Complex(0, 0);
 
-		for (int n1 = 0; n1 < N1; n1++) {
-			for (int n2 = 0; n2 < N2; n2++) {
-				logger.info("k1="+k1+" n1="+n1+" k2="+k2+" n2="+n2);
-				if (n1*k1>0 && n2*k2>0) {
-					F=F.add(this.W_N1.get(-n1*k1).multiply(this.W_N2.get(-n2*k2)).multiply(f[n1][n2]));
-				}else{
-					F=this.W_N1.get(0).multiply(this.W_N2.get(0)).multiply(f[n1][n2]);
-				}
+		for (int n1 = -N1 / 2; n1 < N1 / 2; n1++) {
+			for (int n2 = -N2 / 2; n2 < N2 / 2; n2++) {
+				Complex W1 = new Complex(0, -2 * Math.PI * k1 * n1 / N1);
+				Complex W2 = new Complex(0, -2 * Math.PI * k2 * n2 / N2);
+
+				F = F.add(W1.multiply(W2).multiply(f[n1 + N1 / 2][n2 + N2 / 2]));
+
 			}
 		}
+
 		return F;
 	}
 
@@ -92,20 +62,25 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 	 * Complex[][]
 	 */
 	public Complex[][] get2D_DFT(final double[][] f) {
+
+		logger.info("Computing 2D DFT...");
 		int N1 = f.length;
 		int N2 = f[0].length;
 		Complex[][] F = new Complex[N1][N2];
 
-		for (int k1 = 0; k1 < N1; k1++) {
-			for (int k2 = 0; k2 < N2; k2++) {
-				F[k1][k2] = getDFT(f, k1, k2);				
+		for (int k1 = -N1 / 2; k1 < N1 / 2; k1++) {
+			for (int k2 = -N2 / 2; k2 < N2 / 2; k2++) {
+				F[k1 + N1 / 2][k2 + N2 / 2] = getDFT(f, k1, k2);
 			}
 		}
+		logger.info("2D DFT computed...");
 		return F;
 	}
 
 	/**
 	 * compute and return normalized IDFT element (n1,n2) of R(n1,n2)
+	 * IDFT(n1,n2) = Sum(k1,k2) of (1/(N1*N2) *R[n1,n2] * Complex(0,+ j *2 * PI
+	 * * k1 * n1/N1)* Complex(0,+ j *2 * PI * k2 * n2/N2))
 	 * 
 	 * @param R
 	 * @param n1
@@ -117,13 +92,17 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		int N2 = R[0].length;
 		Complex r = new Complex(0, 0);
 
-		for (int k1 = 0; k1 < N1; k1++) {
-			for (int k2 = 0; k2 < N2; k2++) {				
-				r=r.add(this.W_N1.get(n1*k1).multiply(this.W_N2.get(n2*k2)).multiply(R[k1][k2]));
+		for (int k1 = -N1 / 2; k1 < N1 / 2; k1++) {
+			for (int k2 = -N2 / 2; k2 < N2 / 2; k2++) {
+				Complex W1 = new Complex(0, 2 * Math.PI * k1 * n1 / N1);
+				Complex W2 = new Complex(0, 2 * Math.PI * k2 * n2 / N2);
+
+				r = r.add(W1.multiply(W2).multiply(R[k1 + N1 / 2][k2 + N2 / 2]));
+
 			}
 		}
-		return r.multiply(1L / (N1 * N2));
 
+		return r;
 	}
 
 	/**
@@ -132,11 +111,11 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 	public Complex[][] get2D_IDFT(final Complex[][] R, final int N1,
 			final int N2) {
 		Complex[][] r = new Complex[N1][N2];
-		for (int k1 = 0; k1 < N1; k1++) {
-			for (int k2 = 0; k2 < N2; k2++) {
-				r[k1][k2] = getIDFT(R, k1, k2);
+		for (int n1 = -N1 / 2; n1 < N1 / 2; n1++) {
+			for (int n2 = -N2 / 2; n2 < N2 / 2; n2++) {
+				r[n1 + N1 / 2][n2 + N2 / 2] = getIDFT(R, n1, n2);
 			}
-		}
+		}		
 		return r;
 	}
 
