@@ -8,30 +8,8 @@ import org.apache.commons.math.complex.Complex;
 
 public class DFTMatcher extends GenericMatcher implements IMatcher {
 
-	private Map<Integer, Complex> W1 = null;
-	private Map<Integer, Complex> W2 = null;
-
-	public double match(double[][] reference, double[][] candidate) {
-		int N1 = reference.length;
-		int N2 = reference[0].length;
-
-		logger.info("width=" + N1 + " height=" + N2);
-		W1 = initialize(N1);
-		W2 = initialize(N2);
-		// we suppose images with same size
-		logger.info("computing DFT of reference...");
-		Complex[][] F = get2D_DFT(reference);
-		logger.info("computing DFT of candidate...");
-		Complex[][] G = get2D_DFT(candidate);
-		logger.info("computing cross phase spectrum...");
-		Complex[][] R = getCrossPhaseSpectrum(F, G);
-		logger.info("computing POC...");
-		Complex[][] POC = get2D_IDFT(R, N1, N2);
-		logger.info("looking for a peak in POC...");
-		Point2D peak = getPeak(POC);
-		Complex score = POC[(int) peak.getX()][(int) peak.getY()];
-		return score.getReal();
-	}
+	private  Map<Integer, Complex> W1 = null;
+	private  Map<Integer, Complex> W2 = null;
 
 	/**
 	 * initialize W
@@ -69,26 +47,27 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		int N1 = f.length;
 		int N2 = f[0].length;
 		Complex F = new Complex(f[N1 / 2][N2 / 2], 0);
-		Complex W1;
-		Complex W2;
-
+		Complex w1;
+		Complex w2;
+		
+		
 		for (int n1 = 0; n1 < N1 / 2; n1++) {
 			for (int n2 = 0; n2 < N2 / 2; n2++) {
 
-				W1 = this.W1.get(Integer.valueOf(k1 * n1)).conjugate();
-				W2 = this.W2.get(Integer.valueOf(k2 * n2)).conjugate();
+				w1 = W1.get(Integer.valueOf(k1 * n1)).conjugate();
+				w2 = W2.get(Integer.valueOf(k2 * n2)).conjugate();
 
 				// n1>0 && n2>0
-				Complex a = W1.multiply(W2).multiply(
+				Complex a = w1.multiply(w2).multiply(
 						f[n1 + N1 / 2][n2 + N2 / 2]);
 				// n1>0 && n2<0
-				Complex b = W1.multiply(W2.conjugate()).multiply(
+				Complex b = w1.multiply(w2.conjugate()).multiply(
 						f[n1 + N1 / 2][-n2 + N2 / 2]);
 				// n1<0 && n2>0
-				Complex c = W1.conjugate().multiply(W2)
+				Complex c = w1.conjugate().multiply(w2)
 						.multiply(f[-n1 + N1 / 2][n2 + N2 / 2]);
 				// n1<0 && n2<0
-				Complex d = W1.multiply(W2).conjugate()
+				Complex d = w1.multiply(w2).conjugate()
 						.multiply(f[-n1 + N1 / 2][-n2 + N2 / 2]);
 				F = (n1 == 0 && n2 == 0) ? F : F.add(a).add(b).add(c).add(d);
 			}
@@ -96,10 +75,10 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		}
 
 		int n1 = -N1 / 2;
-		W1 = this.W1.get(Integer.valueOf(k1 * n1)).conjugate();
+		w1 = W1.get(Integer.valueOf(k1 * n1)).conjugate();
 		for (int n2 = -N2 / 2; n2 < N2 / 2; n2++) {
-			W2 = this.W2.get(Integer.valueOf(k2 * n2)).conjugate();
-			F = F.add(W1.multiply(W2).multiply(f[0][n2 + N2 / 2]));
+			w2 = W2.get(Integer.valueOf(k2 * n2)).conjugate();
+			F = F.add(w1.multiply(w2).multiply(f[0][n2 + N2 / 2]));
 		}
 
 		return F;
@@ -109,16 +88,24 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		int N1 = f.length;
 		int N2 = f[0].length;
 		Complex F = new Complex(0, 0);
-		Complex W1;
-		Complex W2;
+		Complex w1;
+		Complex w2;
+		
+		if (W1 == null ){
+			W1 = initialize(N1);
+		}
+		
+		if (W2 == null ){
+			W2 = initialize(N2);
+		}
 
 		for (int n1 = -N1 / 2; n1 < N1 / 2; n1++) {
 			for (int n2 = -N2 / 2; n2 < N2 / 2; n2++) {
 
-				W1 = this.W1.get(Integer.valueOf(k1 * n1)).conjugate();
-				W2 = this.W2.get(Integer.valueOf(k2 * n2)).conjugate();
+				w1 = W1.get(Integer.valueOf(k1 * n1)).conjugate();
+				w2 = W2.get(Integer.valueOf(k2 * n2)).conjugate();
 
-				F = F.add(W1.multiply(W2).multiply(f[n1 + N1 / 2][n2 + N2 / 2]));
+				F = F.add(w1.multiply(w2).multiply(f[n1 + N1 / 2][n2 + N2 / 2]));
 			}
 
 		}		
@@ -207,23 +194,31 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		int N2 = R[0].length;
 		Complex r = new Complex(0, 0);
 
-		Complex W1;
-		Complex W2;
+		Complex w1;
+		Complex w2;
+		
+		if (W1 == null ){
+			W1 = initialize(N1);
+		}
+		
+		if (W2 == null ){
+			W2 = initialize(N2);
+		}
 
 		for (int k1 = -N1 / 2; k1 < N1 / 2; k1++) {
 			for (int k2 = -N1 / 2; k2 < N2 / 2; k2++) {
 
-				W1 = this.W1.get(Integer.valueOf(k1 * n1));
-				W2 = this.W2.get(Integer.valueOf(k2 * n2));
-				r = r.add(W1.multiply(W2).multiply(R[k1 + N1 / 2][k2 + N2 / 2]));
+				w1 = this.W1.get(Integer.valueOf(k1 * n1));
+				w2 = this.W2.get(Integer.valueOf(k2 * n2));
+				r = r.add(w1.multiply(w2).multiply(R[k1 + N1 / 2][k2 + N2 / 2]));
 			}
 		}
 
 		int k1 = -N1 / 2;
-		W1 = this.W1.get(Integer.valueOf(k1 * n1));
+		w1 = this.W1.get(Integer.valueOf(k1 * n1));
 		for (int k2 = -N2 / 2; k2 < N2 / 2; k2++) {
-			W2 = this.W2.get(Integer.valueOf(k2 * n2));
-			r = r.add(W1.multiply(W2).multiply(R[0][n2 + N2 / 2]));
+			w2 = this.W2.get(Integer.valueOf(k2 * n2));
+			r = r.add(w1.multiply(w2).multiply(R[0][n2 + N2 / 2]));
 		}
 
 		return r.divide(new Complex(N1*N2,0));

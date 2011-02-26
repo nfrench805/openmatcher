@@ -19,6 +19,7 @@ import org.apache.commons.math.complex.Complex;
 
 import com.quantum.algorithms.fourier.IMatcher;
 import com.quantum.algorithms.fourier.FFTMatcher;
+import com.quantum.algorithms.fourier.MatcherUnit;
 
 /**
  * @author Pascal Dergane
@@ -26,7 +27,13 @@ import com.quantum.algorithms.fourier.FFTMatcher;
  */
 public class ImageMatcher {
 	
-	private IMatcher matcher=new FFTMatcher();
+	//private IMatcher matcher=new FFTMatcher();
+	
+	private MatcherUnit<FFTMatcher> matcher= new MatcherUnit<FFTMatcher>();
+	
+	public ImageMatcher(){
+		matcher.set(new FFTMatcher());
+	}
 
 	public double match(final InputStream reference, final InputStream candidate)
 			throws IOException {

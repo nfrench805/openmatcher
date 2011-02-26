@@ -25,6 +25,7 @@ public class FFTMatcher extends GenericMatcher implements IMatcher {
 	/**
 	 * match reference against candidate
 	 */
+	@Deprecated
 	public double match(final double[][] reference, final double[][] candidate) {
 		/**
 		 * Step 1: create a Complex[][] matrix, where real part is reference,
@@ -39,9 +40,9 @@ public class FFTMatcher extends GenericMatcher implements IMatcher {
 		double[][] newRef = new double[N1][N2];
 		double[][] newCand = new double[N1][N2];
 
-		//assume there's a defined value for extract pixels
+		// assume there's a defined value for extract pixels
 		for (int i = 0; i < N1; i++) {
-			for (int j = 0; j < N2; j++) {				
+			for (int j = 0; j < N2; j++) {
 				newRef[i][j] = reference[i % reference.length][j
 						% reference[0].length];
 				newCand[i][j] = candidate[i % candidate.length][j
@@ -66,11 +67,15 @@ public class FFTMatcher extends GenericMatcher implements IMatcher {
 	public Complex[][] get2D_DFT(final double[][] f) {
 		int N1 = f.length;
 		int N2 = f[0].length;
-		Complex[][] F = new Complex[N1][N2];
+		
+		N1 = (int) ((this.isPowerOf2(N1)) ? N1 : this.nearestSuperiorPow2(N1));
+		N2 = (int) ((this.isPowerOf2(N2)) ? N2 : this.nearestSuperiorPow2(N2));
 
+		Complex[][] F = new Complex[N1][N2];
+		
 		for (int k1 = 0; k1 < N1; k1++) {
 			for (int k2 = 0; k2 < N2; k2++) {
-				F[k1][k2] = new Complex(f[k1][k2], 0);
+				F[k1][k2] = new Complex(f[k1 % f.length][k2 % f[0].length], 0);
 			}
 		}
 
@@ -88,9 +93,9 @@ public class FFTMatcher extends GenericMatcher implements IMatcher {
 
 		r = (Complex[][]) FFT.mdfft(R, false);
 
-		for (int k1 = 0; k1 < N1; k1++) {
-			for (int k2 = 0; k2 < N2; k2++) {
-				r[k1][k2] = r[k1][k2].multiply(1L / Math.sqrt(N1 * N2));
+		for (int k1 = 0; k1 < r.length; k1++) {
+			for (int k2 = 0; k2 < r[0].length; k2++) {
+				r[k1][k2] = r[k1][k2].multiply(1L / Math.sqrt(r.length * r[0].length));
 			}
 		}
 		return r;

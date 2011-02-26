@@ -18,8 +18,9 @@ import org.junit.Test;
  * 
  */
 public class FFTMatcherTest extends TestCase {
-
-	private IMatcher matcher = new FFTMatcher();
+	
+	private MatcherUnit<FFTMatcher> matcher= new MatcherUnit<FFTMatcher>();
+	
 	private Logger logger = Logger.getLogger(FFTMatcherTest.class.getName());
 	private final int size = 512;
 
@@ -42,6 +43,7 @@ public class FFTMatcherTest extends TestCase {
 	 */
 	@Before
 	public void setUp() throws Exception {
+		matcher.set(new FFTMatcher());
 	}
 
 	/**
@@ -118,24 +120,5 @@ public class FFTMatcherTest extends TestCase {
 		assertTrue(score > 0.3);
 
 	}
-
-	/**
-	 * check method isPowerOf2
-	 */
-	@Test
-	public void testPowerOf2() {
-		assertFalse(((GenericMatcher) matcher).isPowerOf2(0));
-		assertFalse(((GenericMatcher) matcher).isPowerOf2(10));
-		assertTrue(((GenericMatcher) matcher).isPowerOf2(8));
-		assertFalse(((GenericMatcher) matcher).isPowerOf2(922337203685477580L));
-	}
-
-	@Test
-	public void testNearestPowerOf2() {
-		assertEquals(2, ((GenericMatcher) matcher).nearestSuperiorPow2(0));
-		assertEquals(2, ((GenericMatcher) matcher).nearestSuperiorPow2(2));
-		assertEquals(8, ((GenericMatcher) matcher).nearestSuperiorPow2(7));
-		assertEquals(1024, ((GenericMatcher) matcher).nearestSuperiorPow2(999));
-
-	}
+	
 }

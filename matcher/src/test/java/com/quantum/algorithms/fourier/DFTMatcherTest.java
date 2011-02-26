@@ -11,8 +11,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class DFTMatcherTest extends TestCase {
-
-	private IMatcher matcher = new DFTMatcher();
+	
+	private MatcherUnit<DFTMatcher> matcher= new MatcherUnit<DFTMatcher>();
 	private Logger logger = Logger.getLogger(FFTMatcherTest.class.getName());
 	private final int size = 32;
 
@@ -35,6 +35,7 @@ public class DFTMatcherTest extends TestCase {
 	 */
 	@Before
 	public void setUp() throws Exception {
+		matcher.set(new DFTMatcher());
 	}
 
 	/**
