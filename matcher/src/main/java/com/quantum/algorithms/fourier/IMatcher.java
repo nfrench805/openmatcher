@@ -1,19 +1,11 @@
 package com.quantum.algorithms.fourier;
 
+import java.util.Map;
+
 import org.apache.commons.math.complex.Complex;
 
 public interface IMatcher {
 
-	/**
-	 * main method computing a score (probability that candidate image matches
-	 * against reference image
-	 * 
-	 * @param reference
-	 * @param candidate
-	 * @return
-	 */
-	public abstract double match(final double[][] reference,
-			final double[][] candidate);
 
 	/**
 	 * compute cross phase normalized
@@ -57,5 +49,12 @@ public interface IMatcher {
 	 * @return
 	 */
 	public abstract Complex[] getIDFT(final Complex[] F);
+	
+	/**
+	 * initialize class
+	 * @param N
+	 * @return
+	 */
+	public abstract Map<Integer, Complex> initialize(final int N);
 
 }
