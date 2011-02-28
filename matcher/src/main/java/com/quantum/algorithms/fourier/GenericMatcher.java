@@ -22,9 +22,7 @@ public class GenericMatcher<T>  {
 		//default constructor		
 	}
 	
-	
-	
-		
+				
 	/**
 	 * compute DFT of real array (dimension-2)
 	 * @param f

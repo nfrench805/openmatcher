@@ -8,8 +8,8 @@ import org.apache.commons.math.complex.Complex;
 
 public class DFTMatcher extends GenericMatcher implements IMatcher {
 
-	private  Map<Integer, Complex> W1 = null;
-	private  Map<Integer, Complex> W2 = null;
+	private Map<Integer, Complex> W1 = null;
+	private Map<Integer, Complex> W2 = null;
 
 	/**
 	 * initialize W
@@ -34,68 +34,29 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 		return W;
 	}
 
+
 	/**
-	 * Compute DFT element(k1,k2) of f(k1,k2)
+	 * compute Fourier transform F[k1][k2] = sum(-N1/2<n1<N1/2) of sum(
+	 * -N2/2<n2<N2/2) of (f[k1][k2] * exp(-j*2*PI/N1*k1*n1) * exp(-j * 2 * PI *
+	 * k2* n2/N2))
 	 * 
 	 * @param f
 	 * @param k1
 	 * @param k2
 	 * @return
 	 */
-	@Deprecated
-	public Complex getFastDFT(final double[][] f, final int k1, final int k2) {
-		int N1 = f.length;
-		int N2 = f[0].length;
-		Complex F = new Complex(f[N1 / 2][N2 / 2], 0);
-		Complex w1;
-		Complex w2;
-		
-		
-		for (int n1 = 0; n1 < N1 / 2; n1++) {
-			for (int n2 = 0; n2 < N2 / 2; n2++) {
-
-				w1 = W1.get(Integer.valueOf(k1 * n1)).conjugate();
-				w2 = W2.get(Integer.valueOf(k2 * n2)).conjugate();
-
-				// n1>0 && n2>0
-				Complex a = w1.multiply(w2).multiply(
-						f[n1 + N1 / 2][n2 + N2 / 2]);
-				// n1>0 && n2<0
-				Complex b = w1.multiply(w2.conjugate()).multiply(
-						f[n1 + N1 / 2][-n2 + N2 / 2]);
-				// n1<0 && n2>0
-				Complex c = w1.conjugate().multiply(w2)
-						.multiply(f[-n1 + N1 / 2][n2 + N2 / 2]);
-				// n1<0 && n2<0
-				Complex d = w1.multiply(w2).conjugate()
-						.multiply(f[-n1 + N1 / 2][-n2 + N2 / 2]);
-				F = (n1 == 0 && n2 == 0) ? F : F.add(a).add(b).add(c).add(d);
-			}
-
-		}
-
-		int n1 = -N1 / 2;
-		w1 = W1.get(Integer.valueOf(k1 * n1)).conjugate();
-		for (int n2 = -N2 / 2; n2 < N2 / 2; n2++) {
-			w2 = W2.get(Integer.valueOf(k2 * n2)).conjugate();
-			F = F.add(w1.multiply(w2).multiply(f[0][n2 + N2 / 2]));
-		}
-
-		return F;
-	}
-
 	public Complex getDFT(final double[][] f, final int k1, final int k2) {
 		int N1 = f.length;
 		int N2 = f[0].length;
 		Complex F = new Complex(0, 0);
 		Complex w1;
 		Complex w2;
-		
-		if (W1 == null ){
+
+		if (W1 == null) {
 			W1 = initialize(N1);
 		}
-		
-		if (W2 == null ){
+
+		if (W2 == null) {
 			W2 = initialize(N2);
 		}
 
@@ -108,7 +69,7 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 				F = F.add(w1.multiply(w2).multiply(f[n1 + N1 / 2][n2 + N2 / 2]));
 			}
 
-		}		
+		}
 		return F;
 	}
 
@@ -133,62 +94,15 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 	}
 
 	/**
-	 * compute and return normalized IDFT element (n1,n2) of R(n1,n2)
-	 * IDFT(n1,n2) = Sum(k1,k2) of (1/(N1*N2) *R[n1,n2] * Complex(0,+ j *2 * PI
-	 * * k1 * n1/N1)* Complex(0,+ j *2 * PI * k2 * n2/N2))
+	 * compute Inverse Fourier transform r[n1][n2] = sum(-N1/2<k1<N1/2) of sum(
+	 * -N2/2<k2<N2/2) of (R[k1][k2] * exp(+j*2*PI/N1*k1*n1) * exp(+j * 2 * PI *
+	 * k2* n2/N2))
 	 * 
 	 * @param R
 	 * @param n1
 	 * @param n2
 	 * @return
 	 */
-	@Deprecated
-	public Complex getFastIDFT(final Complex[][] R, final int n1, final int n2) {
-		int N1 = R.length;
-		int N2 = R[0].length;
-		Complex r = R[N1 / 2][N2 / 2];
-
-		Complex W1;
-		Complex W2;
-
-		for (int k1 = 0; k1 <= N1 / 2; k1++) {
-			for (int k2 = 0; k2 <= N2 / 2; k2++) {
-
-				W1 = this.W1.get(Integer.valueOf(k1 * n1));
-				W2 = this.W2.get(Integer.valueOf(k2 * n2));
-
-				// k1>0 && k2>0
-				Complex a = (k1 != N1 / 2 && k2 != N2 / 2) ? W1.multiply(W2)
-						.multiply(R[k1 + N1 / 2][k2 + N2 / 2]) : new Complex(0,
-						0);
-				// k1>0 && k2<0
-				Complex b = (k1 != N1 / 2) ? W1.multiply(W2.conjugate())
-						.multiply(R[k1 + N1 / 2][-k2 + N2 / 2]) : new Complex(
-						0, 0);
-				// k1<0 && k2>0
-				Complex c = (k2 != N2 / 2) ? W1.conjugate().multiply(W2)
-						.multiply(R[-k1 + N1 / 2][k2 + N2 / 2]) : new Complex(
-						0, 0);
-				// k1<0 && k2<0
-				Complex d = W1.multiply(W2).conjugate()
-						.multiply(R[-k1 + N1 / 2][-k2 + N2 / 2]);
-
-				r = (k1 == 0 && k2 == 0) ? r : r.add(a).add(b).add(c).add(d);
-
-			}
-		}
-
-		int k1 = -N1 / 2;
-		W1 = this.W1.get(Integer.valueOf(k1 * n1));
-		for (int k2 = -N2 / 2; k2 < N2 / 2; k2++) {
-			W2 = this.W2.get(Integer.valueOf(k2 * n2));
-			r = r.add(W1.multiply(W2).multiply(R[0][n2 + N2 / 2]));
-		}
-
-		return r.divide(new Complex(N1 * N2, 0));
-
-	}
-
 	public Complex getIDFT(final Complex[][] R, final int n1, final int n2) {
 		int N1 = R.length;
 		int N2 = R[0].length;
@@ -196,12 +110,12 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 
 		Complex w1;
 		Complex w2;
-		
-		if (W1 == null ){
+
+		if (W1 == null) {
 			W1 = initialize(N1);
 		}
-		
-		if (W2 == null ){
+
+		if (W2 == null) {
 			W2 = initialize(N2);
 		}
 
@@ -221,7 +135,7 @@ public class DFTMatcher extends GenericMatcher implements IMatcher {
 			r = r.add(w1.multiply(w2).multiply(R[0][n2 + N2 / 2]));
 		}
 
-		return r.divide(new Complex(N1*N2,0));
+		return r.divide(new Complex(N1 * N2, 0));
 	}
 
 	/**
