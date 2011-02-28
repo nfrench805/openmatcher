@@ -145,7 +145,6 @@ public class DFTMatcherTest extends TestCase {
 				int x = (int) ( x0+ ro * Math.cos(theta - theta0));
 				int y = (int) ( y0 + ro * Math.sin(theta - theta0));
 				
-				logger.info("x="+x+" y="+y+ " ("+x0+","+y0+")");
 				if (x<0) x=0;
 				if (y<0) y=0;
 				if (y>size-1) y= size-1;
@@ -155,11 +154,14 @@ public class DFTMatcherTest extends TestCase {
 			}
 		}
 
-		double score = matcher.match(f, g);
-		logger.info("score=" + score);
+		//double score = matcher.match(f, g);
+		double scoreRectangular = matcher.match(f, g);
+		double score = matcher.matchLogPolar(f, g);
+		logger.info("scoreRectangular=" + scoreRectangular);
+		logger.info("scoreLogPolar=" + score);
 		logger.info("rotation defined for test is:" + theta0 / Math.PI * 180
 				+ "°");
-		assertTrue(score>0.1);
+		assertTrue(score>0.9);
 
 	}
 
