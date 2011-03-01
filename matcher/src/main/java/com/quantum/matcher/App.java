@@ -5,14 +5,8 @@ package com.quantum.matcher;
  * 
  */
 public class App {
-	
-	private String refFilename;
-	private String candFilename;
-	private String algorithm;
-	
+
 	public static void main(String[] args) {
-		
-		
 
 	}
 

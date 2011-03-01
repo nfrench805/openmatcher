@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 import org.apache.commons.math.complex.Complex;
 
 
-@SuppressWarnings("hiding")
+
 public class MatcherUnit<Template> {
 		
 	
