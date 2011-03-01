@@ -15,9 +15,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-import org.apache.commons.math.complex.Complex;
-
-import com.quantum.algorithms.fourier.IMatcher;
 import com.quantum.algorithms.fourier.FFTMatcher;
 import com.quantum.algorithms.fourier.MatcherUnit;
 
@@ -48,7 +45,7 @@ public class ImageMatcher {
 		for (int x=0;x<width;x++){
 			for (int y=0;y<height;y++){
 				int pix=(int) imageCandidate.getRGB(x, y);
-				int alpha=(pix >> 24) & 0x0ff;
+				//int alpha=(pix >> 24) & 0x0ff;
 				int r=(pix>>16)& 0x0ff;
 				int g=(pix>>8)& 0x0ff;
 				int b=pix & 0x0ff;
@@ -62,7 +59,7 @@ public class ImageMatcher {
 		for (int x=0;x<width;x++){
 			for (int y=0;y<height;y++){
 				int pix=(int) imageCandidate.getRGB(x, y);
-				int alpha=(pix >> 24) & 0x0ff;
+				//int alpha=(pix >> 24) & 0x0ff;
 				int r=(pix>>16)& 0x0ff;
 				int g=(pix>>8)& 0x0ff;
 				int b=pix & 0x0ff;
