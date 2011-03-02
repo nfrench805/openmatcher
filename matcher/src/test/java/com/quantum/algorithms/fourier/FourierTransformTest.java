@@ -94,5 +94,28 @@ public class FourierTransformTest extends TestCase {
 		//System.out.println("expected=" + expected + " phase=" + phase/size);
 		assertEquals(Math.round(expected),Math.round(phase/size));
 	}
+	
+	/**
+	 * check Plancherel theorem sum (x*x.conjugate) = 1/N * sum (X*X.conjugate)
+	 */
+	public void testPlancherel() {
+		Complex[] dft = FourierTransform.dft(f);
+		Complex[] dft2 = FourierTransform.dft(r);
+
+		Complex expected = new Complex(0,0);
+		Complex phase = new Complex(0,0);
+		for (int k = 0; k < size; k++) {
+			final Complex x = f[k];
+			final Complex y = r[k];
+			final Complex X = dft[k];
+			final Complex Y = dft2[k];
+			expected = expected.add(x.multiply(y.conjugate()));
+			phase = phase.add(X.multiply(Y.conjugate()));
+		}		
+		//System.out.println("expected=" + expected + " phase=" + phase);
+		assertEquals(Math.round(expected.getReal()),Math.round(phase.getReal()/size));
+		assertEquals(Math.round(expected.getImaginary()),Math.round(phase.getImaginary()/size));
+	}
+
 
 }
