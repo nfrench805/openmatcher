@@ -70,11 +70,13 @@ public class FourierTransform {
 			final boolean forward, final int j) {
 		int N = input.length;
 		Complex projection_j = new Complex(0, 0);
-
-		for (int k = 0; k < N; k++) {
-			double theta = 2 * Math.PI * k * j / N;
-			Complex w_jk = new Complex(Math.cos(theta),
-					- Math.sin(theta)) ;
+		double theta = 2 * Math.PI * j / N;
+			
+		for (int k = 0; k < N; k++) {			
+			//double theta2= 2 * Math.PI * (N-k-1) * j / N;
+			//exp(-i*theta2) = exp (+ i *2 * pi * (k+1) * j /N) = W_kj.conjugate * exp (i*2*pi*j/N)			
+			Complex w_jk = new Complex(Math.cos(theta*k),
+					- Math.sin(theta*k)) ;
 			if (!forward){
 				w_jk=w_jk.conjugate();
 			}
