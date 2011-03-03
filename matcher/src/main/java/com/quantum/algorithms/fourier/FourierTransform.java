@@ -88,4 +88,26 @@ public class FourierTransform {
 			return (projection_j.divide(new Complex(N, 0)));
 		}
 	}
+	
+	/**
+	 * return transformed Matrix (dft if forward is true, inverse dft else)
+	 * multiDimensionalComplexMatrix input
+	 * 
+	 * @param input
+	 * @param forward
+	 * @return
+	 */
+	public static Object transformMultiDimensionalComplexMatrix(Object input,boolean forward){
+		Object output = null;
+		//mdcm =        Complex[10][20]...[100]
+		MultiDimensionalComplexMatrix mdcm = new MultiDimensionalComplexMatrix(input);
+		//dimensionSize=Integer[10,20,....,100]
+		Integer[] dimensionSize = mdcm.getDimensionSizes();
+				
+        //cycle through each dimension
+        for (int i = 0; i < dimensionSize.length; i++) {
+            
+        }               
+		return output;
+	}
 }
