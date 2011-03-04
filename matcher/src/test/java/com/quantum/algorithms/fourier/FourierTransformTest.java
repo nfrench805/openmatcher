@@ -75,15 +75,17 @@ public class FourierTransformTest extends TestCase {
 		Complex[] dft = FourierTransform.dft(r);
 
 		for (int i = 1; i < size; i++) {
-			// System.out.println("" + i + " [" + Math.round(dft[i].getReal())
-			// + ";" + Math.round(dft[i].getImaginary()) + "]" + " ["
-			// + Math.round(dft[size - i].getReal()) + ";"
-			// + Math.round(dft[size - i].getImaginary()) + "]");
+//			System.out.println("" + i + " [" + (dft[i].getReal()) + ";"
+//					+ (dft[i].getImaginary()) + "]" + " ["
+//					+ (dft[size - i].getReal()) + ";"
+//					+ (dft[size - i].getImaginary()) + "]");
 
-			assertEquals(Math.round(Math.round(dft[i].getReal())),
-					Math.round(dft[size - i].getReal()));
-			assertEquals(Math.round(dft[i].getImaginary()),
-					-Math.round(dft[size - i].getImaginary()));
+			assertEquals(
+					Math.round(Math.round(dft[i].getReal()
+							- dft[size - i].getReal())), 0);
+			assertEquals(
+					Math.round(dft[i].getImaginary()
+							+ dft[size - i].getImaginary()), 0);
 		}
 	}
 
@@ -133,16 +135,17 @@ public class FourierTransformTest extends TestCase {
 	 * test DFT and IDFT of multi Dimensional input check reversibility
 	 */
 	public void testDFTMultiDimensional() {
-		Complex[][] mdft =(Complex[][]) FourierTransform
+		Complex[][] mdft = (Complex[][]) FourierTransform
 				.transformMultiDimensionalComplexMatrix(multiDimensionalInput,
 						true);
-		Complex[][] imdft = (Complex[][])FourierTransform
+		Complex[][] imdft = (Complex[][]) FourierTransform
 				.transformMultiDimensionalComplexMatrix(mdft, false);
 
 		for (int x = 0; x < size; x++) {
 			for (int y = 0; y < size; y++) {
 				assertEquals(Math.round(Math.round(multiDimensionalInput[x][y]
-						.getReal())), Math.round(((Complex[][]) imdft)[x][y].getReal()));
+						.getReal())), Math.round(((Complex[][]) imdft)[x][y]
+						.getReal()));
 				assertEquals(
 						Math.round(multiDimensionalInput[x][y].getImaginary()),
 						Math.round(((Complex[][]) imdft)[x][y].getImaginary()));
