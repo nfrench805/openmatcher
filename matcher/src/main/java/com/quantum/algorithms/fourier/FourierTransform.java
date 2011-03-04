@@ -69,20 +69,45 @@ public class FourierTransform {
 	public static Complex transform(final Complex[] input,
 			final boolean forward, final int j) {
 		int N = input.length;
-		Complex projection_j = new Complex(0, 0);
 		double theta = 2 * Math.PI * j / N;
 
-		for (int k = 0; k < N; k++) {
+		if (N % 2 == 0) {
+			Complex[] even = new Complex[N / 2];
+			Complex[] odd = new Complex[N / 2];
+
+			for (int k = 0; k < N / 2; k++) {
+				even[k] = input[2 * k];
+				odd[k] = input[2 * k + 1];
+			}
+			Complex twiddle_factor = new Complex(Math.cos(theta),
+					-Math.sin(theta));
+			if (!forward) {
+				twiddle_factor = twiddle_factor.conjugate();
+			}
+			Complex transformed= (transform(even, forward, j).add(transform(odd, forward, j)
+					.multiply(twiddle_factor)));
+			
+			if (forward) {
+				return transformed;
+			} else {
+				return (transformed.divide(new Complex(2, 0)));
+			}			
+		}
+
+		Complex projection_j = input[0];
+		for (int k = 1; k < N; k++) {
+
 			// double theta2= 2 * Math.PI * (N-k-1) * j / N;
 			// exp(-i*theta2) = exp (+ i *2 * pi * (k+1) * j /N) =
 			// W_kj.conjugate * exp (i*2*pi*j/N)
-			Complex w_jk = new Complex(Math.cos(theta * k),
+			Complex twiddle_factor = new Complex(Math.cos(theta * k),
 					-Math.sin(theta * k));
 			if (!forward) {
-				w_jk = w_jk.conjugate();
+				twiddle_factor = twiddle_factor.conjugate();
 			}
-			projection_j = projection_j.add(w_jk.multiply(input[k]));
+			projection_j = projection_j.add(twiddle_factor.multiply(input[k]));
 		}
+
 		if (forward) {
 			return projection_j;
 		} else {
