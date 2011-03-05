@@ -45,9 +45,8 @@ public class ImageMatcherTest extends TestCase {
 
 		assertNotNull(reference);
 
-		double score = matcher.match(reference, candidate);
-
-		assertTrue(score>0L);
+		matcher.match(reference, candidate);
+		
 	}
 	
 	@Test
@@ -60,9 +59,8 @@ public class ImageMatcherTest extends TestCase {
 
 		assertNotNull(reference);
 
-		double score = matcher.match(reference, candidate);
-
-		assertTrue(score>0L);
+		matcher.match(reference, candidate);
+		
 	}
 	
 	@Test
@@ -75,9 +73,8 @@ public class ImageMatcherTest extends TestCase {
 
 		assertNotNull(reference);
 
-		double score = matcher.match(reference, candidate);
+		matcher.match(reference, candidate);
 
-		assertTrue(score>0L);
 	}
 	
 	@Test
@@ -90,9 +87,8 @@ public class ImageMatcherTest extends TestCase {
 
 		assertNotNull(reference);
 
-		double score = matcher.match(reference, candidate);
-
-		assertTrue(score<0.99);
+		matcher.match(reference, candidate);
+		
 	}
 
 	/**
