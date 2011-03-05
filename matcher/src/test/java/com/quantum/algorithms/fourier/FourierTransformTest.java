@@ -6,6 +6,7 @@ package com.quantum.algorithms.fourier;
 import junit.framework.TestCase;
 
 import org.apache.commons.math.complex.Complex;
+import org.apache.commons.math.transform.FastFourierTransformer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -140,6 +141,48 @@ public class FourierTransformTest extends TestCase {
 						true);
 		Complex[][] imdft = (Complex[][]) FourierTransform
 				.transformMultiDimensionalComplexMatrix(mdft, false);
+
+		for (int x = 0; x < size; x++) {
+			for (int y = 0; y < size; y++) {
+				assertEquals(Math.round(Math.round(multiDimensionalInput[x][y]
+						.getReal())), Math.round(((Complex[][]) imdft)[x][y]
+						.getReal()));
+				assertEquals(
+						Math.round(multiDimensionalInput[x][y].getImaginary()),
+						Math.round(((Complex[][]) imdft)[x][y].getImaginary()));
+			}
+		}
+	}
+	
+	/**
+	 * test DFT and IDFT of multi Dimensional input check reversibility
+	 */
+	public void testDFTTransform2D() {
+		Complex[][] mdft = (Complex[][]) FourierTransform
+				.transform(multiDimensionalInput,
+						true);
+		Complex[][] imdft = (Complex[][]) FourierTransform
+				.transform(mdft, false);
+
+		for (int x = 0; x < size; x++) {
+			for (int y = 0; y < size; y++) {
+				assertEquals(Math.round(Math.round(multiDimensionalInput[x][y]
+						.getReal())), Math.round(((Complex[][]) imdft)[x][y]
+						.getReal()));
+				assertEquals(
+						Math.round(multiDimensionalInput[x][y].getImaginary()),
+						Math.round(((Complex[][]) imdft)[x][y].getImaginary()));
+			}
+		}
+	}
+	
+	/**
+	 * test DFT and IDFT of multi Dimensional input check reversibility
+	 */
+	public void testFFT2D() {
+		FastFourierTransformer FFT = new FastFourierTransformer();
+		Complex[][] mdft = (Complex[][]) FFT.mdfft(multiDimensionalInput, true);		
+		Complex[][] imdft = (Complex[][]) FFT.mdfft(mdft, false);
 
 		for (int x = 0; x < size; x++) {
 			for (int y = 0; y < size; y++) {
