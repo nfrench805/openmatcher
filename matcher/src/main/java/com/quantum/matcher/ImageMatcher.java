@@ -50,12 +50,12 @@ public class ImageMatcher {
 	 * @param candidate
 	 * @throws IOException
 	 */
-	public void match(final InputStream reference, final InputStream candidate)
+	public double match(final InputStream reference, final InputStream candidate)
 			throws IOException {
 		logger.info("matching reference against candidate...");
 		Complex[][] imgRef = greyScale(ImageIO.read(reference));
 		Complex[][] imgCand = greyScale(ImageIO.read(candidate));
-		match(imgRef, imgCand);
+		return match(imgRef, imgCand);
 	}
 
 	/**
@@ -64,28 +64,24 @@ public class ImageMatcher {
 	 * @param ref
 	 * @param search
 	 */
-	public void match(final Complex[][] ref, final Complex[][] search) {
-
-		int N = ref.length;
-		int M = ref[0].length;
-
+	public double match(final Complex[][] ref, final Complex[][] search) {
 		// compute FFT
 		logger.info("compute FFT of reference");
 		Complex[][] FFT_ref = transform(ref, true);
 
 		logger.info("compute FFT of searc");
 		Complex[][] FFT_search = transform(search, true);
-
+		
 		// get crossPowerSpectrum
-		logger.info("compute cross Power Spectrum");
 		Complex[][] S = crossPowerSpectrum(FFT_ref, FFT_search);
+		logger.info("Cross Power Spectrum size:" + S.length + "," + S[0].length);
 
-		S = Filter.applyHighPass(S, Math.pow(N / 2, 2) + Math.pow(M / 2, 2));
 		// get POC as Inverse DFT of cross Power Spectrum
 		logger.info("compute POC");
-		Complex[][] POC = (Complex[][]) transform(S, false);		
+		Complex[][] POC = (Complex[][]) transform(S, false);
 
 		Point2D peak = getPeak(POC);
+		return POC[(int) peak.getX()][(int) peak.getY()].getReal();
 	}
 
 	/**
@@ -98,11 +94,15 @@ public class ImageMatcher {
 		Complex peak = new Complex(0, 0);
 		Point2D coordinatesOfPeak = new Point2D.Double();
 
-		for (int i = 0; i < input.length; i++) {
-			for (int j = 0; j < input[0].length; j++) {
-				logger.info("POC[" + i + "][" + j + "]=("
-						+ input[i][j].getReal() + ";"
-						+ input[i][j].getImaginary() + ")");
+		int N = input.length;
+		int M = input[0].length;
+
+		logger.info("N=" + N + " M=" + M);
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < M; j++) {
+				// logger.info("POC[" + i + "][" + j + "]=("
+				// + input[i][j].getReal() + ";"
+				// + input[i][j].getImaginary() + ")");
 				if (input[i][j].getReal() > peak.getReal()) {
 					peak = input[i][j];
 					coordinatesOfPeak.setLocation(i, j);
@@ -110,8 +110,9 @@ public class ImageMatcher {
 			}
 		}
 
-		logger.info("Peak value:(" + peak.getReal() + ","+peak.getImaginary()+") at coordinates "
-				+ coordinatesOfPeak.getX() + "," + coordinatesOfPeak.getY());
+		logger.info("Peak value:(" + peak.getReal() + "," + peak.getImaginary()
+				+ ") at coordinates " + coordinatesOfPeak.getX() + ","
+				+ coordinatesOfPeak.getY());
 		return coordinatesOfPeak;
 	}
 
@@ -134,6 +135,8 @@ public class ImageMatcher {
 		int O = G.length;
 		int P = G[0].length;
 
+		logger.info("N=" + N + " M=" + M + " O=" + O + " P=" + P);
+
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
 				S[i][j] = F[i][j].multiply(G[i][j].conjugate());
@@ -145,13 +148,16 @@ public class ImageMatcher {
 
 	public Complex[][] transform(final Complex[][] input, final boolean forward) {
 		// get size of array (take nearest power of 2 if necessary)
-		int N = (int) nearestSuperiorPow2(input.length);
-		int M = (int) nearestSuperiorPow2(input[0].length);
+		long N = nearestSuperiorPow2((long) input.length);
+		long M = nearestSuperiorPow2((long) input[0].length);
+
+		logger.info("N=" + N + " M=" + M + "(input size=" + input.length + ","
+				+ input[0].length);
 
 		// copy array into output
 		// and complete with zero Complex if necessary
 		// extended size
-		Complex[][] output = new Complex[N][M];
+		Complex[][] output = new Complex[(int) N][(int) M];
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
 				output[i][j] = input[i % input.length][j % input[0].length];
@@ -160,11 +166,15 @@ public class ImageMatcher {
 
 		// compute FFT
 		output = (Complex[][]) FFT.mdfft(output, forward);
-		if (!forward){
-			for (int i=0;i<N;i++){
-				output[i] = FastFourierTransformer.scaleArray(output[i], 1/Math.sqrt(N*M));
+		if (!forward) {
+			for (int i = 0; i < N; i++) {
+				for (int j = 0; j < M; j++) {
+					output[i][j] = output[i][j].multiply(1L / Math.sqrt(N * M));
+				}
 			}
 		}
+
+		logger.info("N=" + output.length + " M=" + output[0].length);
 		return output;
 	}
 
@@ -177,9 +187,13 @@ public class ImageMatcher {
 	 *         example nearestSuperiorPow2(7) will return 8.
 	 */
 	public long nearestSuperiorPow2(final long i) {
-		long x = i > 0 ? ((i - 1) & i) : 1;
-		return (!FastFourierTransformer.isPowerOf2(x)) ? nearestSuperiorPow2(x)
-				: x << 1;
+		if (FastFourierTransformer.isPowerOf2(i)) {
+			return i;
+		} else {
+			long x = i > 0 ? ((i - 1) & i) : 1;
+			return (!FastFourierTransformer.isPowerOf2(x)) ? nearestSuperiorPow2(x)
+					: x << 1;
+		}
 	}
 
 	/**
