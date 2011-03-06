@@ -30,21 +30,22 @@ public class ImageMatcher {
 
 	// private IMatcher matcher=new FFTMatcher();
 
-	//private MatcherUnit<FFTMatcher> matcher = new MatcherUnit<FFTMatcher>();
-	
+	// private MatcherUnit<FFTMatcher> matcher = new MatcherUnit<FFTMatcher>();
+
 	/**
 	 * logger
 	 */
 	protected Logger logger = Logger.getLogger(ImageMatcher.class.getName());
-	
+
 	private FastFourierTransformer FFT = new FastFourierTransformer();
 
 	public ImageMatcher() {
-		//matcher.set(new FFTMatcher());
+		// matcher.set(new FFTMatcher());
 	}
 
 	/**
 	 * match image reference against candidate
+	 * 
 	 * @param reference
 	 * @param candidate
 	 * @throws IOException
@@ -54,125 +55,136 @@ public class ImageMatcher {
 		logger.info("matching reference against candidate...");
 		Complex[][] imgRef = greyScale(ImageIO.read(reference));
 		Complex[][] imgCand = greyScale(ImageIO.read(candidate));
-		match(imgRef,imgCand);
+		match(imgRef, imgCand);
 	}
-	
+
 	/**
 	 * match Complex[][] ref against Complex[][] search
+	 * 
 	 * @param ref
 	 * @param search
 	 */
-	public void match(final Complex[][] ref, final Complex[][] search){
-	
+	public void match(final Complex[][] ref, final Complex[][] search) {
+
 		int N = ref.length;
 		int M = ref[0].length;
-		
-		//compute FFT
+
+		// compute FFT
 		logger.info("compute FFT of reference");
-		Complex[][] FFT_ref = transform(ref,true);
-		
+		Complex[][] FFT_ref = transform(ref, true);
+
 		logger.info("compute FFT of searc");
-		Complex[][] FFT_search = transform(search,true);
-		
-		//get crossPowerSpectrum
+		Complex[][] FFT_search = transform(search, true);
+
+		// get crossPowerSpectrum
 		logger.info("compute cross Power Spectrum");
-		Complex[][] S = crossPowerSpectrum(FFT_ref,FFT_search);
-		
-		S = Filter.applyHighPass(S, Math.pow(N/2,2)+ Math.pow(M/2, 2));
-		//get POC as Inverse DFT of cross Power Spectrum
+		Complex[][] S = crossPowerSpectrum(FFT_ref, FFT_search);
+
+		S = Filter.applyHighPass(S, Math.pow(N / 2, 2) + Math.pow(M / 2, 2));
+		// get POC as Inverse DFT of cross Power Spectrum
 		logger.info("compute POC");
-		Complex[][] POC = (Complex[][]) transform(S,false);
-		
-		Point2D peak = getPeak(POC);		
+		Complex[][] POC = (Complex[][]) transform(S, false);		
+
+		Point2D peak = getPeak(POC);
 	}
-	
+
 	/**
 	 * return coordinates of Peak (max real of input), else 0,0
+	 * 
 	 * @param input
 	 * @return
 	 */
-	public Point2D getPeak(final Complex[][] input){
-		Complex peak=new Complex(0,0);
+	public Point2D getPeak(final Complex[][] input) {
+		Complex peak = new Complex(0, 0);
 		Point2D coordinatesOfPeak = new Point2D.Double();
-		
-		for (int i=0;i<input.length;i++){
-			for (int j=0;j<input[0].length;j++){
-				logger.info("POC["+i+"]["+j+"]=("+input[i][j].getReal()+";"+input[i][j].getImaginary()+")" );
-				if (input[i][j].getReal()>peak.getReal()){
-					peak=input[i][j];
+
+		for (int i = 0; i < input.length; i++) {
+			for (int j = 0; j < input[0].length; j++) {
+				logger.info("POC[" + i + "][" + j + "]=("
+						+ input[i][j].getReal() + ";"
+						+ input[i][j].getImaginary() + ")");
+				if (input[i][j].getReal() > peak.getReal()) {
+					peak = input[i][j];
 					coordinatesOfPeak.setLocation(i, j);
 				}
 			}
 		}
-		
-		logger.info("Peak value:"+peak+" at coordinates "+coordinatesOfPeak.getX()+","+coordinatesOfPeak.getY());
+
+		logger.info("Peak value:(" + peak.getReal() + ","+peak.getImaginary()+") at coordinates "
+				+ coordinatesOfPeak.getX() + "," + coordinatesOfPeak.getY());
 		return coordinatesOfPeak;
 	}
+
 	/**
 	 * compute crossPowerSpectrum of Complex[][] F and G
-	 * @param F, FFT (Complex[][] array) 
-	 * @param G, FFT (Complex[][] array)
-	 * @return cross Power Spectrum as (F*G.Conjugate() / (F*G.conjugate()).abs())
+	 * 
+	 * @param F
+	 *            , FFT (Complex[][] array)
+	 * @param G
+	 *            , FFT (Complex[][] array)
+	 * @return cross Power Spectrum as (F*G.Conjugate() /
+	 *         (F*G.conjugate()).abs())
 	 */
-	public Complex[][] crossPowerSpectrum(final Complex[][] F, final Complex[][] G){
+	public Complex[][] crossPowerSpectrum(final Complex[][] F,
+			final Complex[][] G) {
 		logger.info("Compute crossPowerSpectrum...");
 		int N = F.length;
 		int M = F[0].length;
 		Complex[][] S = new Complex[N][M];
 		int O = G.length;
 		int P = G[0].length;
-		
-		for (int i = 0;i<N;i++){
-			for (int j=0;j<M;j++){
+
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < M; j++) {
 				S[i][j] = F[i][j].multiply(G[i][j].conjugate());
-				S[i][j] = S[i][j].divide(new Complex(S[i][j].abs(),0));
+				S[i][j] = S[i][j].divide(new Complex(S[i][j].abs(), 0));
 			}
-		}		
+		}
 		return S;
 	}
-	
-	public Complex[][] transform(final Complex[][] input,final boolean forward){		
-		//get size of array (take nearest power of 2 if necessary)
+
+	public Complex[][] transform(final Complex[][] input, final boolean forward) {
+		// get size of array (take nearest power of 2 if necessary)
 		int N = (int) nearestSuperiorPow2(input.length);
 		int M = (int) nearestSuperiorPow2(input[0].length);
-		
-		//copy array into output
-		//and complete with zero Complex if necessary
-		//extended size
-		Complex[][] output = new Complex[N][M];		
-		for (int i=0;i<input.length;i++){
-			for (int j = 0; j<input[i].length;j++){
-				output[i][j] = input[i][j];
-			}
-			//fill with zero extended value to complete array
-			for (int j=input[i].length;j<M;j++){
-				output[i][j] = new Complex(0,0);
+
+		// copy array into output
+		// and complete with zero Complex if necessary
+		// extended size
+		Complex[][] output = new Complex[N][M];
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < M; j++) {
+				output[i][j] = input[i % input.length][j % input[0].length];
 			}
 		}
-		//fill with zero extended value to complete array
-		for (int i=input.length;i<N;i++){
-			for (int j=input[0].length;j<M;j++){
-				output[i][j] = new Complex(0,0);
+
+		// compute FFT
+		output = (Complex[][]) FFT.mdfft(output, forward);
+		if (!forward){
+			for (int i=0;i<N;i++){
+				output[i] = FastFourierTransformer.scaleArray(output[i], 1/Math.sqrt(N*M));
 			}
 		}
-		
-		//compute FFT
-		return (Complex[][]) FFT.mdfft(output, forward);		
+		return output;
 	}
-	
+
 	/**
-	 * return nearest greater power of 2 
-	 * @param i value to evaluate
-	 * @return i if i is power of 2, else nearest superior power of 2
-	 * for example nearestSuperiorPow2(7) will return 8.
+	 * return nearest greater power of 2
+	 * 
+	 * @param i
+	 *            value to evaluate
+	 * @return i if i is power of 2, else nearest superior power of 2 for
+	 *         example nearestSuperiorPow2(7) will return 8.
 	 */
 	public long nearestSuperiorPow2(final long i) {
 		long x = i > 0 ? ((i - 1) & i) : 1;
-		return (!FastFourierTransformer.isPowerOf2(x)) ? nearestSuperiorPow2(x) : x << 1;
+		return (!FastFourierTransformer.isPowerOf2(x)) ? nearestSuperiorPow2(x)
+				: x << 1;
 	}
 
 	/**
 	 * convert image as greyScale Complex[][] array
+	 * 
 	 * @param image
 	 * @return
 	 */
