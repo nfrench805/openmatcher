@@ -85,7 +85,7 @@ public class ImageMatcher {
 		// FFT_search = Filter.applyHighPass(FFT_search, 0);
 
 		// compute Band Limited POC
-		Complex[][] POC = getBandLimitedPOC(FFT_ref, FFT_search, false);
+		Complex[][] POC = getBandLimitedPOC(FFT_ref, FFT_search, true);
 
 		// display 2 greater Peak
 		List<Peak> peakList = getPeak(POC);
