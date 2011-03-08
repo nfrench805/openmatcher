@@ -69,9 +69,12 @@ public class ImageMatcher {
 		logger.info("compute FFT of reference");
 		Complex[][] FFT_ref = transform(ref, true);
 
+		// FFT_ref = Filter.applyHighPass(FFT_ref, 0);
+
 		logger.info("compute FFT of searc");
 		Complex[][] FFT_search = transform(search, true);
-		
+		// FFT_search = Filter.applyHighPass(FFT_search, 0);
+
 		// get crossPowerSpectrum
 		Complex[][] S = crossPowerSpectrum(FFT_ref, FFT_search);
 		logger.info("Cross Power Spectrum size:" + S.length + "," + S[0].length);
@@ -82,6 +85,27 @@ public class ImageMatcher {
 
 		Point2D peak = getPeak(POC);
 		return POC[(int) peak.getX()][(int) peak.getY()].getReal();
+	}
+
+	/**
+	 * return Magnitude/Amplitude of complex input
+	 * 
+	 * @param input
+	 * @return return amplitude as sqrt(real^2+imaginary^2)
+	 */
+	public double amplitudeOf(final Complex input) {
+		return Math.sqrt(Math.pow(input.getReal(), 2)
+				+ Math.pow(input.getImaginary(), 2));
+	}
+
+	/**
+	 * return phase of complex
+	 * 
+	 * @param input
+	 * @return phase (angle in Radian between PI and -PI)
+	 */
+	public double phaseOf(final Complex input) {
+		return Math.atan2(input.getImaginary(), input.getReal());
 	}
 
 	/**
@@ -103,7 +127,8 @@ public class ImageMatcher {
 				// logger.info("POC[" + i + "][" + j + "]=("
 				// + input[i][j].getReal() + ";"
 				// + input[i][j].getImaginary() + ")");
-				if (input[i][j].getReal() > peak.getReal()) {
+				double amplitude = amplitudeOf(input[i][j]);
+				if (amplitude >= amplitudeOf(peak)) {
 					peak = input[i][j];
 					coordinatesOfPeak.setLocation(i, j);
 				}
@@ -112,7 +137,8 @@ public class ImageMatcher {
 
 		logger.info("Peak value:(" + peak.getReal() + "," + peak.getImaginary()
 				+ ") at coordinates " + coordinatesOfPeak.getX() + ","
-				+ coordinatesOfPeak.getY());
+				+ coordinatesOfPeak.getY() + "; Amplitude ="
+				+ amplitudeOf(peak) + " phase=" + phaseOf(peak));
 		return coordinatesOfPeak;
 	}
 
@@ -160,7 +186,13 @@ public class ImageMatcher {
 		Complex[][] output = new Complex[(int) N][(int) M];
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
-				output[i][j] = input[i % input.length][j % input[0].length];
+				Complex e= new Complex(0,-Math.PI*(i+j)).exp();
+				if ((i>=input.length) || (j>=input[0].length)){
+					output[i][j] = new Complex(0,0);
+				}else{
+					output[i][j] = input[i][j].multiply(e);	
+				}
+				
 			}
 		}
 

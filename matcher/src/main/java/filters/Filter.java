@@ -3,6 +3,8 @@
  */
 package filters;
 
+import java.util.logging.Logger;
+
 import org.apache.commons.math.complex.Complex;
 
 /**
@@ -26,6 +28,8 @@ import org.apache.commons.math.complex.Complex;
  * 
  */
 public class Filter {
+	
+	private static Logger logger= Logger.getLogger(Filter.class.getName());
 
 	/**
 	 * apply a highPass filter on input
@@ -37,13 +41,18 @@ public class Filter {
 	 * @return Complex[][] image filtered
 	 */
 	public static Complex[][] applyHighPass(final Complex[][] input,final double threshold) {
+		logger.info("Applying HighPass Filter on FFT...");
 		int N = input.length;
 		int M = input[0].length;
 		Complex[][] output = new Complex[N][M];
 		for (int j = 0; j < M; j++) {
+			double Y = Math.cos(Math.PI*(j-M/2)/M);
 			for (int i = 0; i < N; i++) {
-				double r2 = Math.pow((i-N/2),2) + Math.pow(j-M/2, 2);
-				output[i][j] = (r2<threshold)? new Complex(0,0):input[i][j];
+				logger.fine("i="+i+" j="+j);
+				//double r2 = Math.pow((i-N/2),2) + Math.pow(j-M/2, 2);
+				double X = Math.cos(Math.PI*(i-N/2)/N)*Y;
+				double H = (1-X)*(2-X);
+				output[i][j] = input[i][j].multiply(H);				
 			}
 		}
 		return output;

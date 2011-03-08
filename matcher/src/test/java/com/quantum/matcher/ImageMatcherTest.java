@@ -13,6 +13,8 @@ import javax.imageio.ImageIO;
 
 import junit.framework.TestCase;
 
+import org.apache.commons.math.complex.Complex;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -183,6 +185,69 @@ public class ImageMatcherTest extends TestCase {
 		InputStream reference = new BufferedInputStream(new FileInputStream(
 				refFilename));
 		matcher.displayImage(ImageIO.read(reference));
+	}
+	
+	public Complex[][] input;
+	public Complex[][] inputOffset;
+	public Complex[][] inputRotation;
+	double theta = Math.PI*Math.random();//angle in radian
+	
+	@Before
+	public void setUp() throws Exception {
+		int N=128;
+		int M=128;
+		int xOffset = 10;
+		int yOffset = 10;
+		
+		
+		input= new Complex[N][M];
+		inputOffset= new Complex[N][M];
+		inputRotation= new Complex[N][M];
+		
+		for (int i=0;i<N;i++){
+			for (int j =0;j<M;j++){
+				input[i][j] = new Complex(Math.random()*255,Math.random()*255);
+				inputOffset[(i+xOffset)%N][(j+yOffset)%M] = input[i][j];				
+			}
+		}
+		
+		for (int i=0;i<N;i++){
+			for (int j =0;j<M;j++){
+				double r2=Math.pow((i-N/2), 2) +Math.pow((j-M/2), 2);
+				double angle = Math.atan2(j-M/2, i-N/2);
+				int x = (int) (N/2 + Math.sqrt(r2)*Math.cos(angle - theta));
+				int y = (int) (M/2 + Math.sqrt(r2)*Math.sin(angle - theta));
+				if (x<0){
+					x=0;
+				}
+				if (y<0){
+					y=0;
+				}
+				
+				inputRotation[i][j] = input[x%N][y%M];								
+			}
+		}
+		
+		
+	}
+	
+	@Test
+	public void testMatchSameInput(){
+		double score = matcher.match(input, input);
+		assertTrue(score>0.9);
+	}
+	
+	@Test
+	public void testMatchSameInputWithOffset(){
+		double score = matcher.match(input, inputOffset);
+		assertTrue(score>0.9);
+	}
+	
+	@Test
+	public void testMatchSameInputWithRotation(){
+		double score = matcher.match(input, inputRotation);
+		logger.info("Rotation angle="+theta);
+		assertTrue(score>0.9);
 	}
 }
 
