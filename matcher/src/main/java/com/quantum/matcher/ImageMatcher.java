@@ -9,7 +9,10 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
@@ -19,8 +22,6 @@ import javax.swing.JLabel;
 
 import org.apache.commons.math.complex.Complex;
 import org.apache.commons.math.transform.FastFourierTransformer;
-
-import filters.Filter;
 
 /**
  * @author Pascal Dergane
@@ -83,8 +84,14 @@ public class ImageMatcher {
 		logger.info("compute POC");
 		Complex[][] POC = (Complex[][]) transform(S, false);
 
-		Point2D peak = getPeak(POC);
-		return POC[(int) peak.getX()][(int) peak.getY()].getReal();
+		List<Peak> peakList = getPeak(POC);
+		logger.info("--------------------------------------------------------------------------------------------------------------------------------------------------");
+		logger.info("amplitude of first Peak:"+peakList.get(0).getAmplitude()+" Coordinates:"+peakList.get(0).getPoint().getX()+","+peakList.get(0).getPoint().getY());
+		logger.info("amplitude of second Peak:"+peakList.get(1).getAmplitude()+" Coordinates:"+peakList.get(1).getPoint().getX()+","+peakList.get(1).getPoint().getY());
+		logger.info("--------------------------------------------------------------------------------------------------------------------------------------------------");
+		int N = POC.length;
+		int M = POC[0].length;
+		return amplitudeOf(POC[(int) (peakList.get(0).getPoint().getX()) % N][(int) (peakList.get(0).getPoint().getY()) % M]);
 	}
 
 	/**
@@ -114,9 +121,11 @@ public class ImageMatcher {
 	 * @param input
 	 * @return
 	 */
-	public Point2D getPeak(final Complex[][] input) {
-		Complex peak = new Complex(0, 0);
-		Point2D coordinatesOfPeak = new Point2D.Double();
+	public List<Peak> getPeak(final Complex[][] input) {
+
+		List<Peak> peakList = new ArrayList<Peak>();
+
+		// Complex peak = new Complex(0, 0);
 
 		int N = input.length;
 		int M = input[0].length;
@@ -124,22 +133,19 @@ public class ImageMatcher {
 		logger.info("N=" + N + " M=" + M);
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
-				// logger.info("POC[" + i + "][" + j + "]=("
-				// + input[i][j].getReal() + ";"
-				// + input[i][j].getImaginary() + ")");
+				Peak peak = new Peak();
+				Point2D coordinatesOfPeak = new Point2D.Double();
+				coordinatesOfPeak.setLocation(i, j);
 				double amplitude = amplitudeOf(input[i][j]);
-				if (amplitude >= amplitudeOf(peak)) {
-					peak = input[i][j];
-					coordinatesOfPeak.setLocation(i, j);
-				}
+				double phase = phaseOf(input[i][j]);
+				peak.setPoint(coordinatesOfPeak);
+				peak.setAmplitude(amplitude);
+				peak.setPhase(phase);
+				peakList.add(peak);
 			}
 		}
-
-		logger.info("Peak value:(" + peak.getReal() + "," + peak.getImaginary()
-				+ ") at coordinates " + coordinatesOfPeak.getX() + ","
-				+ coordinatesOfPeak.getY() + "; Amplitude ="
-				+ amplitudeOf(peak) + " phase=" + phaseOf(peak));
-		return coordinatesOfPeak;
+		Collections.sort(peakList);
+		return peakList;
 	}
 
 	/**
@@ -176,6 +182,7 @@ public class ImageMatcher {
 		// get size of array (take nearest power of 2 if necessary)
 		long N = nearestSuperiorPow2((long) input.length);
 		long M = nearestSuperiorPow2((long) input[0].length);
+		Complex ONE = new Complex(1, 0);
 
 		logger.info("N=" + N + " M=" + M + "(input size=" + input.length + ","
 				+ input[0].length);
@@ -186,13 +193,15 @@ public class ImageMatcher {
 		Complex[][] output = new Complex[(int) N][(int) M];
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
-				Complex e= new Complex(0,-Math.PI*(i+j)).exp();
-				if ((i>=input.length) || (j>=input[0].length)){
-					output[i][j] = new Complex(0,0);
-				}else{
-					output[i][j] = input[i][j].multiply(e);	
+				// Complex e= (!forward)?new
+				// Complex(0,-Math.PI*(i+j)).exp():ONE;
+				if ((i >= input.length) || (j >= input[0].length)) {
+					output[i][j] = new Complex(0, 0);
+				} else {
+					// output[i][j] = input[i][j].multiply(e);
+					output[i][j] = input[i][j];
 				}
-				
+
 			}
 		}
 
