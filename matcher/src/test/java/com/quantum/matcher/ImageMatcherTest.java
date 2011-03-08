@@ -30,6 +30,8 @@ public class ImageMatcherTest extends TestCase {
 	private String candFilename2 = "C:/workspace/matcher/src/test/resources/data/1/001_1_2.bmp";
 	private String candFilename3 = "C:/workspace/matcher/src/test/resources/data/1/001_1_3.bmp";
 	private String candFilename4 = "C:/workspace/matcher/src/test/resources/data/F_24_11.gif";
+	private String finger1 = "C:/workspace/matcher/src/test/resources/data/ProcessedSample1.bmp";
+	private String finger2 = "C:/workspace/matcher/src/test/resources/data/ProcessedSample2.bmp";
 	
 	private final String FOLDER = "C:/workspace/matcher/src/test/resources/data/";
 	private String book_ref = FOLDER + "book_ref.jpg";
@@ -271,6 +273,21 @@ public class ImageMatcherTest extends TestCase {
 	public void testMatchSameInputWithWhiteNoise(){
 		double score = matcher.match(input, inputWhiteNoise,p);		
 		assertTrue(score>0.7);
+	}
+	
+	/**
+	 * match 2 similar but not same fingers
+	 * @throws IOException
+	 */
+	@Test
+	public void testMatchFingers() throws IOException {
+		InputStream reference = new BufferedInputStream(new FileInputStream(
+				finger1));
+		InputStream candidate = new BufferedInputStream(new FileInputStream(
+				finger2));
+		assertNotNull(reference);
+		double score = matcher.match(reference, candidate,p);
+		assertTrue(score < 0.5);
 	}
 }
 
