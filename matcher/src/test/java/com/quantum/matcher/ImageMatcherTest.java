@@ -188,9 +188,14 @@ public class ImageMatcherTest extends TestCase {
 	}
 	
 	public Complex[][] input;
+	public Complex[][] inputBrightness;
 	public Complex[][] inputOffset;
 	public Complex[][] inputRotation;
+	public Complex[][] inputWhiteNoise;
+	
 	double theta = Math.PI*Math.random();//angle in radian
+	double brightnessScale = Math.random()*0.5;
+	
 	
 	@Before
 	public void setUp() throws Exception {
@@ -203,11 +208,15 @@ public class ImageMatcherTest extends TestCase {
 		input= new Complex[N][M];
 		inputOffset= new Complex[N][M];
 		inputRotation= new Complex[N][M];
+		inputBrightness = new Complex[N][M];
+		inputWhiteNoise = new Complex[N][M];
 		
 		for (int i=0;i<N;i++){
 			for (int j =0;j<M;j++){
-				input[i][j] = new Complex(Math.random()*255,Math.random()*255);
-				inputOffset[(i+xOffset)%N][(j+yOffset)%M] = input[i][j];				
+				input[i][j] = new Complex(Math.random()*255,Math.random()*Math.PI*2);
+				inputOffset[(i+xOffset)%N][(j+yOffset)%M] = input[i][j];
+				inputBrightness[i][j] =  input[i][j].multiply(brightnessScale);
+				inputWhiteNoise[i][j] =  input[i][j].add(new Complex((Math.random()-0.5)*100,0));
 			}
 		}
 		
@@ -248,6 +257,19 @@ public class ImageMatcherTest extends TestCase {
 		double score = matcher.match(input, inputRotation);
 		logger.info("Rotation angle="+theta);
 		assertTrue(score>0.9);
+	}
+	
+	@Test
+	public void testMatchSameInputWithBrightness(){
+		double score = matcher.match(input, inputBrightness);
+		logger.info("brightness scale="+this.brightnessScale);
+		assertTrue(score>0.9);
+	}
+	
+	@Test
+	public void testMatchSameInputWithWhiteNoise(){
+		double score = matcher.match(input, inputWhiteNoise);		
+		assertTrue(score>0.7);
 	}
 }
 
