@@ -40,6 +40,7 @@ public class ImageMatcherTest extends TestCase {
 	private String book_rotation15 = FOLDER + "book_rotation15degree.jpeg";
 	private String book_obscured = FOLDER + "book_obscured.jpeg";
 	private String book_unrated = FOLDER + "book_unralated.jpeg";
+	private int p = 3;
 	
 	
 	
@@ -68,7 +69,7 @@ public class ImageMatcherTest extends TestCase {
 
 		assertNotNull(reference);
 
-		double score = matcher.match(reference, candidate);
+		double score = matcher.match(reference, candidate,p);
 
 		assertTrue(score > 0.9);
 
@@ -84,7 +85,7 @@ public class ImageMatcherTest extends TestCase {
 
 		assertNotNull(reference);
 
-		double score = matcher.match(reference, candidate);
+		double score = matcher.match(reference, candidate,p);
 
 		assertTrue(score > 0.9);
 
@@ -100,7 +101,7 @@ public class ImageMatcherTest extends TestCase {
 
 		assertNotNull(reference);
 
-		double score = matcher.match(reference, candidate);
+		double score = matcher.match(reference, candidate,p);
 		assertTrue(score > 0.9);
 
 	}
@@ -115,7 +116,7 @@ public class ImageMatcherTest extends TestCase {
 
 		assertNotNull(reference);
 
-		double score = matcher.match(reference, candidate);
+		double score = matcher.match(reference, candidate,p);
 		assertTrue(score < 0.9);
 
 	}
@@ -127,7 +128,7 @@ public class ImageMatcherTest extends TestCase {
 
 		InputStream candidate = new BufferedInputStream(new FileInputStream(
 				this.book_clip));
-		double score = matcher.match(reference, candidate);
+		double score = matcher.match(reference, candidate,p);
 		assertTrue(score > 0.9);
 	}
 	
@@ -138,7 +139,7 @@ public class ImageMatcherTest extends TestCase {
 
 		InputStream candidate = new BufferedInputStream(new FileInputStream(
 				this.book_left));
-		double score = matcher.match(reference, candidate);
+		double score = matcher.match(reference, candidate,p);
 		assertTrue(score > 0.9);
 	}
 	
@@ -149,7 +150,7 @@ public class ImageMatcherTest extends TestCase {
 
 		InputStream candidate = new BufferedInputStream(new FileInputStream(
 				this.book_right));
-		double score = matcher.match(reference, candidate);
+		double score = matcher.match(reference, candidate,p);
 		assertTrue(score > 0.9);
 	}
 	
@@ -160,7 +161,7 @@ public class ImageMatcherTest extends TestCase {
 
 		InputStream candidate = new BufferedInputStream(new FileInputStream(
 				this.book_obscured));
-		double score = matcher.match(reference, candidate);
+		double score = matcher.match(reference, candidate,p);
 		assertTrue(score > 0.9);
 	}
 	
@@ -171,7 +172,7 @@ public class ImageMatcherTest extends TestCase {
 
 		InputStream candidate = new BufferedInputStream(new FileInputStream(
 				this.book_unrated));
-		double score = matcher.match(reference, candidate);
+		double score = matcher.match(reference, candidate,p);
 		assertTrue(score < 0.9);
 	}
 
@@ -242,33 +243,33 @@ public class ImageMatcherTest extends TestCase {
 	
 	@Test
 	public void testMatchSameInput(){
-		double score = matcher.match(input, input);
+		double score = matcher.match(input, input,p);
 		assertTrue(score>0.9);
 	}
 	
 	@Test
 	public void testMatchSameInputWithOffset(){
-		double score = matcher.match(input, inputOffset);
+		double score = matcher.match(input, inputOffset,p);
 		assertTrue(score>0.9);
 	}
 	
 	@Test
 	public void testMatchSameInputWithRotation(){
-		double score = matcher.match(input, inputRotation);
+		double score = matcher.match(input, inputRotation,p);
 		logger.info("Rotation angle="+theta);
 		assertTrue(score>0.9);
 	}
 	
 	@Test
 	public void testMatchSameInputWithBrightness(){
-		double score = matcher.match(input, inputBrightness);
+		double score = matcher.match(input, inputBrightness,p);
 		logger.info("brightness scale="+this.brightnessScale);
 		assertTrue(score>0.9);
 	}
 	
 	@Test
 	public void testMatchSameInputWithWhiteNoise(){
-		double score = matcher.match(input, inputWhiteNoise);		
+		double score = matcher.match(input, inputWhiteNoise,p);		
 		assertTrue(score>0.7);
 	}
 }

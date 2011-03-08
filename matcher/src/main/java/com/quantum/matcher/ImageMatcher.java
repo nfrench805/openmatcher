@@ -49,49 +49,188 @@ public class ImageMatcher {
 	 * 
 	 * @param reference
 	 * @param candidate
+	 * @param p
+	 *            number of P first of peak to take account to compute score of
+	 *            Matching
 	 * @throws IOException
 	 */
-	public double match(final InputStream reference, final InputStream candidate)
-			throws IOException {
-		logger.info("matching reference against candidate...");
+	public double match(final InputStream reference,
+			final InputStream candidate, final int p) throws IOException {
+		logger.fine("matching reference against candidate...");
 		Complex[][] imgRef = greyScale(ImageIO.read(reference));
 		Complex[][] imgCand = greyScale(ImageIO.read(candidate));
-		return match(imgRef, imgCand);
+		return match(imgRef, imgCand, p);
 	}
 
 	/**
-	 * match Complex[][] ref against Complex[][] search
+	 * match Complex[][] reference against Complex[][] search
 	 * 
 	 * @param ref
+	 *            image as complex[][] reference
 	 * @param search
+	 *            image as complex[][] candidate
+	 * @param p
+	 *            define the number of peak to sum to compute matching score
 	 */
-	public double match(final Complex[][] ref, final Complex[][] search) {
+	public double match(final Complex[][] ref, final Complex[][] search,
+			final int p) {
 		// compute FFT
-		logger.info("compute FFT of reference");
+		logger.fine("compute FFT of reference");
 		Complex[][] FFT_ref = transform(ref, true);
 
 		// FFT_ref = Filter.applyHighPass(FFT_ref, 0);
 
-		logger.info("compute FFT of searc");
+		logger.fine("compute FFT of searc");
 		Complex[][] FFT_search = transform(search, true);
 		// FFT_search = Filter.applyHighPass(FFT_search, 0);
 
+		// compute Band Limited POC
+		Complex[][] POC = getBandLimitedPOC(FFT_ref, FFT_search, false);
+
+		// display 2 greater Peak
+		List<Peak> peakList = getPeak(POC);
+		return getScore(peakList, p);
+	}
+
+	/**
+	 * return score of p first peak
+	 * 
+	 * @param peakList
+	 * @param p
+	 * @return
+	 */
+	public double getScore(final List<Peak> peakList, final int p) {
+		double score = 0;
+		int nb = (p < peakList.size()) ? p : peakList.size();
+		for (int i = 0; i < nb; i++) {
+			score += peakList.get(i).getAmplitude();
+		}
+		logger.info("------------------------------------");
+		logger.info("Score returned =" + score + " with p=" + nb);
+		logger.info("------------------------------------");
+		return score;
+
+	}
+
+	/**
+	 * from F (FFT of reference image ) and G (FFT of search image) compute Band
+	 * Limited Phase Only Correlation Inverse FFT of crossPowerSpectrum (F,G)
+	 * limited between -K1,+K1 and -K2,+K2 where K1 = max (x | projection of
+	 * Amplitude/k2 >= average) K2 = max (x | projection of Amplitude/k2 >=
+	 * average)
+	 * 
+	 * @param F
+	 * @param G
+	 * @param limited
+	 *            if true, then compute K1, K2 and return Band limited POC else
+	 *            return original POC without computing K1,K2
+	 * @return
+	 */
+	public Complex[][] getBandLimitedPOC(final Complex[][] F,
+			final Complex[][] G, final boolean limited) {
+		int N = F.length;
+		int M = F[0].length;
+
+		int K1 = N / 2;
+		int K2 = M / 2;
+
+		// get K1 and K2
+		if (limited) {
+			K1 = getKx(F);
+			K2 = getKy(F);
+		}
+
+		logger.fine("K1=" + K1 + " K2=" + K2);
+
 		// get crossPowerSpectrum
-		Complex[][] S = crossPowerSpectrum(FFT_ref, FFT_search);
-		logger.info("Cross Power Spectrum size:" + S.length + "," + S[0].length);
+		Complex[][] S = crossPowerSpectrum(F, G);
+		logger.fine("Cross Power Spectrum size:" + S.length + "," + S[0].length);
+
+		Complex[][] Sk1k2 = new Complex[2 * K1 + 1][2 * K2 + 1];
+		if (limited) {
+			for (int i = -K1; i <= K1; i++) {
+				for (int j = -K2; j <= K2; j++) {
+					// logger.fine("i="+i+" j="+j+" N="+N+" M="+M);
+					Sk1k2[i + K1][j + K2] = S[(i + N / 2) % N][(j + M / 2) % M];
+				}
+			}
+		}
 
 		// get POC as Inverse DFT of cross Power Spectrum
-		logger.info("compute POC");
-		Complex[][] POC = (Complex[][]) transform(S, false);
+		logger.fine("compute band limited POC");
+		Complex[][] POC = limited ? (Complex[][]) transform(Sk1k2, false)
+				: (Complex[][]) transform(S, false);
+		return POC;
+	}
 
-		List<Peak> peakList = getPeak(POC);
-		logger.info("--------------------------------------------------------------------------------------------------------------------------------------------------");
-		logger.info("amplitude of first Peak:"+peakList.get(0).getAmplitude()+" Coordinates:"+peakList.get(0).getPoint().getX()+","+peakList.get(0).getPoint().getY());
-		logger.info("amplitude of second Peak:"+peakList.get(1).getAmplitude()+" Coordinates:"+peakList.get(1).getPoint().getX()+","+peakList.get(1).getPoint().getY());
-		logger.info("--------------------------------------------------------------------------------------------------------------------------------------------------");
-		int N = POC.length;
-		int M = POC[0].length;
-		return amplitudeOf(POC[(int) (peakList.get(0).getPoint().getX()) % N][(int) (peakList.get(0).getPoint().getY()) % M]);
+	/**
+	 * compute Kx as first x > N/2 where amplitudeOf(sum(F/y)) > average of
+	 * Amplitude projected where N is length of F following X
+	 * 
+	 * @param F
+	 *            FFT of image
+	 * @return 0 or value between 0 and N/2-1
+	 */
+	public int getKx(final Complex[][] F) {
+		int N = F.length;
+		int M = F[0].length;
+		double[] projectionOfamplitude = new double[N];
+		double average = 0;
+
+		/**
+		 * project on X axis / Y axis
+		 */
+		for (int i = 0; i < N; i++) {
+			projectionOfamplitude[i] = 0;
+			for (int j = 0; j < M; j++) {
+				projectionOfamplitude[i] += amplitudeOf(F[i][j]);
+			}
+			average += projectionOfamplitude[i];
+		}
+		average = average / N;
+
+		for (int i = N / 2; i < N; i++) {
+			if (projectionOfamplitude[i] > average) {
+				return (i - N / 2);
+			}
+		}
+
+		return 0;
+	}
+
+	/**
+	 * compute Ky as first y > M/2 where amplitudeOf(sum(F/x)) > average of
+	 * Amplitude projected where M is length of F following Y
+	 * 
+	 * @param F
+	 *            FFT of image
+	 * @return 0 or value between 0 and M/2-1
+	 */
+	public int getKy(final Complex[][] F) {
+		int N = F.length;
+		int M = F[0].length;
+		double[] projectionOfamplitude = new double[M];
+		double average = 0;
+
+		/**
+		 * project on Y axis / X axis
+		 */
+		for (int j = 0; j < M; j++) {
+			projectionOfamplitude[j] = 0;
+			for (int i = 0; i < N; i++) {
+				projectionOfamplitude[j] += amplitudeOf(F[i][j]);
+			}
+			average += projectionOfamplitude[j];
+		}
+		average = average / M;
+
+		for (int i = M / 2; i < M; i++) {
+			if (projectionOfamplitude[i] > average) {
+				return (i - M / 2);
+			}
+		}
+
+		return 0;
 	}
 
 	/**
@@ -130,7 +269,7 @@ public class ImageMatcher {
 		int N = input.length;
 		int M = input[0].length;
 
-		logger.info("N=" + N + " M=" + M);
+		logger.fine("N=" + N + " M=" + M);
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
 				Peak peak = new Peak();
@@ -160,14 +299,14 @@ public class ImageMatcher {
 	 */
 	public Complex[][] crossPowerSpectrum(final Complex[][] F,
 			final Complex[][] G) {
-		logger.info("Compute crossPowerSpectrum...");
+		logger.fine("Compute crossPowerSpectrum...");
 		int N = F.length;
 		int M = F[0].length;
 		Complex[][] S = new Complex[N][M];
 		int O = G.length;
 		int P = G[0].length;
 
-		logger.info("N=" + N + " M=" + M + " O=" + O + " P=" + P);
+		logger.fine("N=" + N + " M=" + M + " O=" + O + " P=" + P);
 
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
@@ -184,7 +323,7 @@ public class ImageMatcher {
 		long M = nearestSuperiorPow2((long) input[0].length);
 		Complex ONE = new Complex(1, 0);
 
-		logger.info("N=" + N + " M=" + M + "(input size=" + input.length + ","
+		logger.fine("N=" + N + " M=" + M + "(input size=" + input.length + ","
 				+ input[0].length);
 
 		// copy array into output
@@ -215,7 +354,7 @@ public class ImageMatcher {
 			}
 		}
 
-		logger.info("N=" + output.length + " M=" + output[0].length);
+		logger.fine("N=" + output.length + " M=" + output[0].length);
 		return output;
 	}
 
@@ -244,7 +383,7 @@ public class ImageMatcher {
 	 * @return
 	 */
 	public Complex[][] greyScale(final BufferedImage image) {
-		logger.info("convert image into greyScale...");
+		logger.fine("convert image into greyScale...");
 		int width = image.getWidth();
 		int height = image.getHeight();
 		Complex[][] imgRef = new Complex[width][height];
