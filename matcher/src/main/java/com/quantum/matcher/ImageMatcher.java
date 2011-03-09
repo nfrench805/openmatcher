@@ -197,7 +197,7 @@ public class ImageMatcher {
 			
 		}
 		average = average/N;
-		logger.info("Average =" + average);
+		//logger.info("Average =" + average);
 		for (int i = 0; i <= N/2; i++) {
 			if (projectionOfamplitude[i] < average) {
 				//logger.info("projection =" + projectionOfamplitude[i]);
@@ -234,7 +234,7 @@ public class ImageMatcher {
 			average += projectionOfamplitude[j];
 		}
 		average = average / M;
-		logger.info("Average =" + average);
+		//logger.info("Average =" + average);
 		for (int i = M-1; i >= M/2; i--) {
 			if (projectionOfamplitude[i] < average) {
 				//logger.info("projection =" + projectionOfamplitude[i]);
