@@ -127,17 +127,25 @@ public class ImageMatcher {
 	 * @return
 	 */
 	public Complex[][] getBandLimitedPOC(final Complex[][] F,
-			final Complex[][] G, final boolean limited) {
+			final Complex[][] G, final boolean isBandLimited) {
 		int N = F.length;
 		int M = F[0].length;
 
-		int K1 = N / 2;
-		int K2 = M / 2;
+		int K1 = 0;
+		int K2 = 0;
+		int KF1=0;
+		int KF2=0;
+		int KG1=0;
+		int KG2=0;
 
 		// get K1 and K2
-		if (limited) {
-			K1 = getKx(F);
-			K2 = getKy(F);
+		if (isBandLimited) {
+			KF1 = getKx(F);
+			KF2 = getKy(F);
+			KG1 = getKx(G);
+			KG2 = getKy(G);
+			K1=Math.min(KF1,KG1);
+			K2=Math.min(KF2,KG2);
 		}
 
 		logger.fine("K1=" + K1 + " K2=" + K2);
@@ -147,10 +155,9 @@ public class ImageMatcher {
 		logger.fine("Cross Power Spectrum size:" + S.length + "," + S[0].length);
 
 		Complex[][] Sk1k2 = new Complex[2 * K1 + 1][2 * K2 + 1];
-		if (limited) {
+		if (isBandLimited) {
 			for (int i = -K1; i <= K1; i++) {
-				for (int j = -K2; j <= K2; j++) {
-					// logger.fine("i="+i+" j="+j+" N="+N+" M="+M);
+				for (int j = -K2; j <= K2; j++) {					
 					Sk1k2[i + K1][j + K2] = S[(i + N / 2) % N][(j + M / 2) % M];
 				}
 			}
@@ -158,7 +165,7 @@ public class ImageMatcher {
 
 		// get POC as Inverse DFT of cross Power Spectrum
 		logger.fine("compute band limited POC");
-		Complex[][] POC = limited ? (Complex[][]) transform(Sk1k2, false)
+		Complex[][] POC = isBandLimited ? (Complex[][]) transform(Sk1k2, false)
 				: (Complex[][]) transform(S, false);
 		return POC;
 	}
@@ -184,14 +191,18 @@ public class ImageMatcher {
 			projectionOfamplitude[i] = 0;
 			for (int j = 0; j < M; j++) {
 				projectionOfamplitude[i] += amplitudeOf(F[i][j]);
+				average += amplitudeOf(F[i][j]);
 			}
-			average += projectionOfamplitude[i];
+			//System.out.println(i+" "+Math.round(projectionOfamplitude[i]));
+			
 		}
-		average = average / N;
-
-		for (int i = N / 2; i < N; i++) {
-			if (projectionOfamplitude[i] > average) {
-				return (i - N / 2);
+		average = average/N;
+		logger.info("Average =" + average);
+		for (int i = 0; i <= N/2; i++) {
+			if (projectionOfamplitude[i] < average) {
+				//logger.info("projection =" + projectionOfamplitude[i]);
+				//logger.info("K1="+ (N/2-i)+" N/2="+N/2);
+				return (N / 2 - i);
 			}
 		}
 
@@ -223,13 +234,15 @@ public class ImageMatcher {
 			average += projectionOfamplitude[j];
 		}
 		average = average / M;
-
-		for (int i = M / 2; i < M; i++) {
-			if (projectionOfamplitude[i] > average) {
+		logger.info("Average =" + average);
+		for (int i = M-1; i >= M/2; i--) {
+			if (projectionOfamplitude[i] < average) {
+				//logger.info("projection =" + projectionOfamplitude[i]);
+				//logger.info("K2="+ (i-M/2)+" M/2="+M/2);
 				return (i - M / 2);
 			}
 		}
-
+		
 		return 0;
 	}
 
