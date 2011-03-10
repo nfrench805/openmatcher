@@ -51,15 +51,15 @@ public class ImageMatcherTest extends TestCase {
 	double theta = Math.PI*Math.random();//angle in radian
 	double brightnessScale = Math.random()*0.5;
 	
+	final int N=128;
+	final int M=128;
+	
+	final int xOffset = (int) ((Math.random())*10);
+	final int yOffset = (int) ((Math.random())*10);
+	
 	
 	@Before
-	public void setUp() throws Exception {
-		int N=128;
-		int M=128;
-		int xOffset = 10;
-		int yOffset = 10;
-		
-		
+	public void setUp() throws Exception {		
 		input= new Complex[N][M];
 		inputOffset= new Complex[N][M];
 		inputRotation= new Complex[N][M];
@@ -121,9 +121,12 @@ public class ImageMatcherTest extends TestCase {
 
 		assertNotNull(reference);
 
-		double score = matcher.match(reference, candidate,p);
+		MatchingScore score = matcher.match(reference, candidate,p);
+		logger.info("Rotation estimated="+score.getRotation());
+		logger.info("horizontal shift="+score.getHorizontal_shift());		
+		logger.info("vertical shift="+score.getVertical_shift());
 
-		assertTrue(score > 0.9);
+		assertTrue(score.getScore() > 0.9);
 
 	}
 
@@ -168,8 +171,11 @@ public class ImageMatcherTest extends TestCase {
 
 		assertNotNull(reference);
 
-		double score = matcher.match(reference, candidate,p);
-		assertTrue(score < 0.9);
+		MatchingScore score = matcher.match(reference, candidate,p);
+		logger.info("Rotation estimated="+score.getRotation());
+		logger.info("horizontal shift="+score.getHorizontal_shift());		
+		logger.info("vertical shift="+score.getVertical_shift());
+		assertTrue(score.getScore() < 0.9);
 
 	}
 	
@@ -241,37 +247,66 @@ public class ImageMatcherTest extends TestCase {
 //	}
 	
 	
-	
+	/**
+	 * test matching between input and input
+	 */
 	@Test
 	public void testMatchSameInput(){
-		double score = matcher.match(input, input,p);
-		assertTrue(score>0.9);
+		MatchingScore score = matcher.match(input, input,p);
+		logger.info("Rotation estimated="+score.getRotation());
+		logger.info("horizontal shift="+score.getHorizontal_shift());		
+		logger.info("vertical shift="+score.getVertical_shift());
+		assertTrue(score.getScore()>0.9);
 	}
-	
+	/**
+	 * test matching between input and shift(input)
+	 */
 	@Test
 	public void testMatchSameInputWithOffset(){
-		double score = matcher.match(input, inputOffset,p);
-		assertTrue(score>0.9);
+		MatchingScore score = matcher.match(input, inputOffset,p);
+		logger.info("Rotation estimated="+score.getRotation());	
+		assertTrue(score.getScore()>0.9);
+		assertEquals(xOffset,(int) (- score.getHorizontal_shift()));
+		assertEquals(yOffset,(int) (- score.getVertical_shift()));
+		
 	}
-	
+	/**
+	 * test matching between input and rotation(input)
+	 */
 	@Test
 	public void testMatchSameInputWithRotation(){
-		double score = matcher.match(input, inputRotation,p);
+		MatchingScore score = matcher.match(input, inputRotation,p);
 		logger.info("Rotation angle="+theta);
-		assertTrue(score>0.9);
+		
+		logger.info("Rotation estimated="+score.getRotation());
+		logger.info("horizontal shift="+score.getHorizontal_shift());		
+		logger.info("vertical shift="+score.getVertical_shift());
+		assertTrue(score.getScore()>0.9);
 	}
 	
+	/**
+	 * test matching between input and input+brightness
+	 */
 	@Test
 	public void testMatchSameInputWithBrightness(){
-		double score = matcher.match(input, inputBrightness,p);
+		MatchingScore score = matcher.match(input, inputBrightness,p);
 		logger.info("brightness scale="+this.brightnessScale);
-		assertTrue(score>0.9);
+		logger.info("Rotation estimated="+score.getRotation());
+		logger.info("horizontal shift="+score.getHorizontal_shift());		
+		logger.info("vertical shift="+score.getVertical_shift());
+		assertTrue(score.getScore()>0.9);
 	}
 	
+	/**
+	 * test matching between input and input+white noise
+	 */
 	@Test
 	public void testMatchSameInputWithWhiteNoise(){
-		double score = matcher.match(input, inputWhiteNoise,p);		
-		assertTrue(score>0.7);
+		MatchingScore score = matcher.match(input, inputWhiteNoise,p);
+		logger.info("Rotation estimated="+score.getRotation());
+		logger.info("horizontal shift="+score.getHorizontal_shift());		
+		logger.info("vertical shift="+score.getVertical_shift());
+		assertTrue(score.getScore()>0.7);
 	}
 	
 	/**
@@ -285,8 +320,11 @@ public class ImageMatcherTest extends TestCase {
 		InputStream candidate = new BufferedInputStream(new FileInputStream(
 				finger2));
 		assertNotNull(reference);
-		double score = matcher.match(reference, candidate,p);
-		assertTrue(score < 0.5);
+		MatchingScore score = matcher.match(reference, candidate,p);
+		logger.info("Rotation estimated="+score.getRotation());
+		logger.info("horizontal shift="+score.getHorizontal_shift());		
+		logger.info("vertical shift="+score.getVertical_shift());
+		assertTrue(score.getScore() < 0.5);
 	}
 }
 

@@ -54,7 +54,7 @@ public class ImageMatcher {
 	 *            Matching
 	 * @throws IOException
 	 */
-	public double match(final InputStream reference,
+	public MatchingScore match(final InputStream reference,
 			final InputStream candidate, final int p) throws IOException {
 		logger.fine("matching reference against candidate...");
 		Complex[][] imgRef = greyScale(ImageIO.read(reference));
@@ -72,7 +72,7 @@ public class ImageMatcher {
 	 * @param p
 	 *            define the number of peak to sum to compute matching score
 	 */
-	public double match(final Complex[][] ref, final Complex[][] search,
+	public MatchingScore match(final Complex[][] ref, final Complex[][] search,
 			final int p) {
 		// compute FFT
 		logger.fine("compute FFT of reference");
@@ -99,8 +99,10 @@ public class ImageMatcher {
 	 * @param p
 	 * @return
 	 */
-	public double getScore(final List<Peak> peakList, final int p) {
-		double score = 0;
+	public MatchingScore getScore(final List<Peak> peakList, final int p) {
+		MatchingScore matchingScore = new MatchingScore();
+		double score = 0.0;
+		
 		final int nb = Math.min(peakList.size(),p);
 		for (int i = 0; i < nb; i++) {
 			System.out.println("Peak["+i+"]="+peakList.get(i).getAmplitude()+" at ("+
@@ -111,7 +113,11 @@ public class ImageMatcher {
 		logger.info("------------------------------------");
 		logger.info("Score returned =" + score + " with p=" + nb);
 		logger.info("------------------------------------");
-		return score;
+		
+		matchingScore.setScore(score);
+		matchingScore.setHorizontal_shift(peakList.get(0).getRelativePixel().getX());
+		matchingScore.setVertical_shift(peakList.get(0).getRelativePixel().getY());
+		return matchingScore;
 
 	}
 
@@ -185,9 +191,13 @@ public class ImageMatcher {
 				Peak peak = new Peak();
 				Point2D coordinatesOfPeak = new Point2D.Double();
 				coordinatesOfPeak.setLocation(i, j);
+				Point2D relativeCoordinatesOfPeak = new Point2D.Double();
+				relativeCoordinatesOfPeak.setLocation(i-N/2, j-M/2);
+				
 				double amplitude = amplitudeOf(input[i][j]);
 				double phase = phaseOf(input[i][j]);
 				peak.setPoint(coordinatesOfPeak);
+				peak.setRelativePixel(relativeCoordinatesOfPeak);
 				peak.setAmplitude(amplitude);
 				peak.setPhase(phase);
 				peakList.add(peak);
