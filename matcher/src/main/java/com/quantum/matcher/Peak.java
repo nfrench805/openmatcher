@@ -4,13 +4,26 @@ import java.awt.geom.Point2D;
 
 public class Peak implements Comparable<Peak> {
 
-	private Point2D point;
+	/**
+	 * original coordinates (from topleft)
+	 */
+	private Point2D pixel;
+	/**
+	 * relative coordinates (from middle)
+	 */
+	private Point2D relativePixel;
+	/**
+	 * amplitude/magnitude at point (pixel)
+	 */
 	private double amplitude;
+	/**
+	 * phase at point (pixel)
+	 */
 	private double phase;
 
 	public Peak() {
 		// default constructor;
-		point = new Point2D.Double(0, 0);
+		pixel = new Point2D.Double(0, 0);
 		amplitude = 0;
 		phase = 0;
 	}
@@ -46,18 +59,18 @@ public class Peak implements Comparable<Peak> {
 	}
 
 	/**
-	 * @param point
-	 *            the point to set
+	 * @param pixel
+	 *            the pixel to set
 	 */
 	public void setPoint(Point2D point) {
-		this.point = point;
+		this.pixel = point;
 	}
 
 	/**
-	 * @return the point
+	 * @return the pixel
 	 */
 	public Point2D getPoint() {
-		return point;
+		return pixel;
 	}
 
 	/**
@@ -73,6 +86,20 @@ public class Peak implements Comparable<Peak> {
 		}
 		*/
 		return ret;
+	}
+
+	/**
+	 * @param relativePixel the relativePixel to set
+	 */
+	public void setRelativePixel(Point2D relativePixel) {
+		this.relativePixel = relativePixel;
+	}
+
+	/**
+	 * @return the relativePixel
+	 */
+	public Point2D getRelativePixel() {
+		return relativePixel;
 	}
 
 }
