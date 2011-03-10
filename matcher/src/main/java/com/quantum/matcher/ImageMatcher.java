@@ -85,10 +85,10 @@ public class ImageMatcher {
 		// FFT_search = Filter.applyHighPass(FFT_search, 0);
 
 		// compute Band Limited POC
-		Complex[][] POC = getBandLimitedPOC(FFT_ref, FFT_search, true);
+		Complex[][] POC = getPOC(FFT_ref, FFT_search);
 
 		// display 2 greater Peak
-		List<Peak> peakList = getPeak(POC);
+		List<Peak> peakList = getPeaks(POC);
 		return getScore(peakList, p);
 	}
 
@@ -101,8 +101,11 @@ public class ImageMatcher {
 	 */
 	public double getScore(final List<Peak> peakList, final int p) {
 		double score = 0;
-		int nb = (p < peakList.size()) ? p : peakList.size();
+		final int nb = Math.min(peakList.size(),p);
 		for (int i = 0; i < nb; i++) {
+			System.out.println("Peak["+i+"]="+peakList.get(i).getAmplitude()+" at ("+
+					(int) peakList.get(i).getPoint().getX()+","+
+					(int) peakList.get(i).getPoint().getY());
 			score += peakList.get(i).getAmplitude();
 		}
 		logger.info("------------------------------------");
@@ -126,125 +129,19 @@ public class ImageMatcher {
 	 *            return original POC without computing K1,K2
 	 * @return
 	 */
-	public Complex[][] getBandLimitedPOC(final Complex[][] F,
-			final Complex[][] G, final boolean isBandLimited) {
-		int N = F.length;
-		int M = F[0].length;
-
-		int K1 = 0;
-		int K2 = 0;
-		int KF1=0;
-		int KF2=0;
-		int KG1=0;
-		int KG2=0;
-
-		// get K1 and K2
-		if (isBandLimited) {
-			KF1 = getKx(F);
-			KF2 = getKy(F);
-			KG1 = getKx(G);
-			KG2 = getKy(G);
-			K1=Math.min(KF1,KG1);
-			K2=Math.min(KF2,KG2);
-		}
-
-		logger.fine("K1=" + K1 + " K2=" + K2);
-
+	public Complex[][] getPOC(final Complex[][] F,
+			final Complex[][] G) {
 		// get crossPowerSpectrum
-		Complex[][] S = crossPowerSpectrum(F, G);
+		final Complex[][] S = crossPowerSpectrum(F, G);
+			
 		logger.fine("Cross Power Spectrum size:" + S.length + "," + S[0].length);
-
-		Complex[][] Sk1k2 = new Complex[2 * K1 + 1][2 * K2 + 1];
-		if (isBandLimited) {
-			for (int i = -K1; i <= K1; i++) {
-				for (int j = -K2; j <= K2; j++) {					
-					Sk1k2[i + K1][j + K2] = S[(i + N / 2) % N][(j + M / 2) % M];
-				}
-			}
-		}
-
 		// get POC as Inverse DFT of cross Power Spectrum
 		logger.fine("compute band limited POC");
-		Complex[][] POC = isBandLimited ? (Complex[][]) transform(Sk1k2, false)
-				: (Complex[][]) transform(S, false);
+		final Complex[][] POC = (Complex[][]) transform(S, false);
 		return POC;
 	}
 
-	/**
-	 * compute Kx as first x > N/2 where amplitudeOf(sum(F/y)) > average of
-	 * Amplitude projected where N is length of F following X
-	 * 
-	 * @param F
-	 *            FFT of image
-	 * @return 0 or value between 0 and N/2-1
-	 */
-	public int getKx(final Complex[][] F) {
-		int N = F.length;
-		int M = F[0].length;
-		double[] projectionOfamplitude = new double[N];
-		double average = 0;
-
-		/**
-		 * project on X axis / Y axis
-		 */
-		for (int i = 0; i < N; i++) {
-			projectionOfamplitude[i] = 0;
-			for (int j = 0; j < M; j++) {
-				projectionOfamplitude[i] += amplitudeOf(F[i][j]);
-				average += amplitudeOf(F[i][j]);
-			}
-			//System.out.println(i+" "+Math.round(projectionOfamplitude[i]));
-			
-		}
-		average = average/N;
-		//logger.info("Average =" + average);
-		for (int i = 0; i <= N/2; i++) {
-			if (projectionOfamplitude[i] < average) {
-				//logger.info("projection =" + projectionOfamplitude[i]);
-				//logger.info("K1="+ (N/2-i)+" N/2="+N/2);
-				return (N / 2 - i);
-			}
-		}
-
-		return 0;
-	}
-
-	/**
-	 * compute Ky as first y > M/2 where amplitudeOf(sum(F/x)) > average of
-	 * Amplitude projected where M is length of F following Y
-	 * 
-	 * @param F
-	 *            FFT of image
-	 * @return 0 or value between 0 and M/2-1
-	 */
-	public int getKy(final Complex[][] F) {
-		int N = F.length;
-		int M = F[0].length;
-		double[] projectionOfamplitude = new double[M];
-		double average = 0;
-
-		/**
-		 * project on Y axis / X axis
-		 */
-		for (int j = 0; j < M; j++) {
-			projectionOfamplitude[j] = 0;
-			for (int i = 0; i < N; i++) {
-				projectionOfamplitude[j] += amplitudeOf(F[i][j]);
-			}
-			average += projectionOfamplitude[j];
-		}
-		average = average / M;
-		//logger.info("Average =" + average);
-		for (int i = M-1; i >= M/2; i--) {
-			if (projectionOfamplitude[i] < average) {
-				//logger.info("projection =" + projectionOfamplitude[i]);
-				//logger.info("K2="+ (i-M/2)+" M/2="+M/2);
-				return (i - M / 2);
-			}
-		}
-		
-		return 0;
-	}
+	
 
 	/**
 	 * return Magnitude/Amplitude of complex input
@@ -273,14 +170,14 @@ public class ImageMatcher {
 	 * @param input
 	 * @return
 	 */
-	public List<Peak> getPeak(final Complex[][] input) {
+	public List<Peak> getPeaks(final Complex[][] input) {
 
 		List<Peak> peakList = new ArrayList<Peak>();
 
 		// Complex peak = new Complex(0, 0);
 
-		int N = input.length;
-		int M = input[0].length;
+		final int N = input.length;
+		final int M = input[0].length;
 
 		logger.fine("N=" + N + " M=" + M);
 		for (int i = 0; i < N; i++) {
@@ -313,11 +210,11 @@ public class ImageMatcher {
 	public Complex[][] crossPowerSpectrum(final Complex[][] F,
 			final Complex[][] G) {
 		logger.fine("Compute crossPowerSpectrum...");
-		int N = F.length;
-		int M = F[0].length;
+		final int N = F.length;
+		final int M = F[0].length;
 		Complex[][] S = new Complex[N][M];
-		int O = G.length;
-		int P = G[0].length;
+		final int O = G.length;
+		final int P = G[0].length;
 
 		logger.fine("N=" + N + " M=" + M + " O=" + O + " P=" + P);
 
@@ -330,13 +227,19 @@ public class ImageMatcher {
 		return S;
 	}
 
+	/**
+	 * Compute FFT (or Inverse FFT) of input
+	 * @param input
+	 * @param forward true if FFT, false if inverse of FFT
+	 * @return
+	 */
 	public Complex[][] transform(final Complex[][] input, final boolean forward) {
 		// get size of array (take nearest power of 2 if necessary)
-		long N = nearestSuperiorPow2((long) input.length);
-		long M = nearestSuperiorPow2((long) input[0].length);
-		Complex ONE = new Complex(1, 0);
+		final long N = nearestSuperiorPow2((long) input.length);
+		final long M = nearestSuperiorPow2((long) input[0].length);
+		
 
-		logger.fine("N=" + N + " M=" + M + "(input size=" + input.length + ","
+		System.out.println("N=" + N + " M=" + M + "(input size=" + input.length + ","
 				+ input[0].length);
 
 		// copy array into output
@@ -344,33 +247,50 @@ public class ImageMatcher {
 		// extended size
 		Complex[][] output = new Complex[(int) N][(int) M];
 		for (int i = 0; i < N; i++) {
-			for (int j = 0; j < M; j++) {
-				// Complex e= (!forward)?new
-				// Complex(0,-Math.PI*(i+j)).exp():ONE;
+			for (int j = 0; j < M; j++) {				
 				if ((i >= input.length) || (j >= input[0].length)) {
 					output[i][j] = new Complex(0, 0);
 				} else {
-					// output[i][j] = input[i][j].multiply(e);
 					output[i][j] = input[i][j];
 				}
 
 			}
 		}
 
+		final Complex normalizeFactor = new Complex (Math.sqrt(N * M),0); 
 		// compute FFT
 		output = (Complex[][]) FFT.mdfft(output, forward);
 		if (!forward) {
 			for (int i = 0; i < N; i++) {
 				for (int j = 0; j < M; j++) {
-					output[i][j] = output[i][j].multiply(1L / Math.sqrt(N * M));
+					output[i][j] = output[i][j].divide(normalizeFactor);
 				}
 			}
 		}
 
+		
 		logger.fine("N=" + output.length + " M=" + output[0].length);
-		return output;
+		return (!forward)?shiftOrigine(output,(int) (N/2),(int) (M/2)):output;
 	}
 
+	/**
+	 * shift topleft origin to x,y
+	 * @param input
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public Complex[][] shiftOrigine(final Complex[][] input, final int x,final int y){
+		final int N=input.length;
+		final int M=input[0].length;
+		Complex[][] output = new Complex[N][M];
+		for (int i=0;i<N;i++){
+			for (int j=0;j<M;j++){
+				output[i][j] = input[(i+x) %N][(j+y)%M];
+			}
+		}
+		return output;
+	}
 	/**
 	 * return nearest greater power of 2
 	 * 
