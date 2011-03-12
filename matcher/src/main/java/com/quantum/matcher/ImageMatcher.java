@@ -231,7 +231,8 @@ public class ImageMatcher {
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
 				S[i][j] = F[i][j].multiply(G[i][j].conjugate());
-				S[i][j] = S[i][j].divide(new Complex(S[i][j].abs(), 0));
+				
+				S[i][j] = (S[i][j].abs()==0.0 )? new Complex(0,0): S[i][j].divide(new Complex(S[i][j].abs(), 0));
 			}
 		}
 		return S;
