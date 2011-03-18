@@ -54,6 +54,13 @@ public class FourierTests extends TestCase {
 
 	@Test
 	public void testTransform() {
+		long start1 = System.currentTimeMillis();
+		Complex[] DFT1 = FFT.transform(input);
+		Complex[] IDFT1 = FFT.inversetransform(DFT1);
+		long end1 = System.currentTimeMillis();
+		long apacheElapsedTime = (end1 - start1);
+		System.out.println("Apache FFT elapsed time(ms) =" + apacheElapsedTime);
+		
 		long start = System.currentTimeMillis();
 		Complex[] DFT = Fourier.transform(input, true);
 		Complex[] IDFT = Fourier.transform(DFT, false);
@@ -61,12 +68,7 @@ public class FourierTests extends TestCase {
 		long elapsedTime = end - start;
 		System.out.println("elapsed time(ms) =" + elapsedTime);
 
-		long start1 = System.currentTimeMillis();
-		Complex[] DFT1 = FFT.transform(input);
-		Complex[] IDFT1 = FFT.inversetransform(DFT1);
-		long end1 = System.currentTimeMillis();
-		long apacheElapsedTime = (end1 - start1);
-		System.out.println("Apache FFT elapsed time(ms) =" + apacheElapsedTime);
+		
 
 		for (int k = 0; k < N; k++) {
 
