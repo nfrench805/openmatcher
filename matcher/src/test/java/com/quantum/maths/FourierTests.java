@@ -17,7 +17,7 @@ import org.junit.Test;
 public class FourierTests extends TestCase {
 
 	private FastFourierTransformer FFT = new FastFourierTransformer();
-	private int N = 8192;
+	private int N = 16384/2;
 	private Complex[] input = new Complex[N];
 	private Complex[] inputReal = new Complex[N];
 
@@ -66,21 +66,24 @@ public class FourierTests extends TestCase {
 		Complex[] IDFT = Fourier.transform(DFT, false);
 		long end = System.currentTimeMillis();
 		long elapsedTime = end - start;
-		System.out.println("elapsed time(ms) =" + elapsedTime);
-
-		
-
+		System.out.println("Radix 2 elapsed time(ms) =" + elapsedTime);
+	
 		for (int k = 0; k < N; k++) {
-
+			
 //			 System.out.println(k+" >"+input[k].getReal()+","+input[k].getImaginary());
-//			 System.out.println(k+" >"+IDFT[k].getReal()+","+IDFT[k].getImaginary());
 //			 System.out.println(k+" >"+IDFT1[k].getReal()+","+IDFT1[k].getImaginary());
+//			 System.out.println(k+" >"+IDFT[k].getReal()+","+IDFT[k].getImaginary());
+//			 System.out.println(k+" >"+IDFT2[k].getReal()+","+IDFT2[k].getImaginary());
+//			 System.out.println(k+" >"+IDFT4[k].getReal()+","+IDFT4[k].getImaginary());
+//			 System.out.println(k+" >"+DFT1[k].getReal()+","+DFT1[k].getImaginary());
+//			 System.out.println(k+" >"+DFT[k].getReal()+","+DFT[k].getImaginary());
+//			 System.out.println(k+" >"+DFT2[k].getReal()+","+DFT2[k].getImaginary());
+//			 System.out.println(k+" >"+DFT4[k].getReal()+","+DFT4[k].getImaginary());
 //			 System.out.println("------------------------------------------------------");
 			assertEquals(Math.round(input[k].getReal()),
 					Math.round(IDFT[k].getReal()));
 			assertEquals(Math.round(input[k].getImaginary()),
 					Math.round(IDFT[k].getImaginary()));
-
 		}
 	}
 
