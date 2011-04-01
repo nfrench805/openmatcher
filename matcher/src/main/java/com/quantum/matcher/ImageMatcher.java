@@ -23,6 +23,8 @@ import javax.swing.JLabel;
 import org.apache.commons.math.complex.Complex;
 import org.apache.commons.math.transform.FastFourierTransformer;
 
+import com.quantum.maths.Polar;
+
 /**
  * @author Pascal Dergane
  * 
@@ -78,17 +80,26 @@ public class ImageMatcher {
 		logger.fine("compute FFT of reference");
 		Complex[][] FFT_ref = transform(ref, true);
 
-		// FFT_ref = Filter.applyHighPass(FFT_ref, 0);
+		Complex[][] LFFT_ref = Polar.transformTo(FFT_ref);
 
 		logger.fine("compute FFT of searc");
 		Complex[][] FFT_search = transform(search, true);
-		// FFT_search = Filter.applyHighPass(FFT_search, 0);
-
-		// compute Band Limited POC
+		Complex[][] LFFT_search = Polar.transformTo(FFT_search);
+	
+		//POC of Polar
+		Complex[][] LPOC = getPOC(LFFT_ref, LFFT_search);
+		
+		//POC of rectangular
 		Complex[][] POC = getPOC(FFT_ref, FFT_search);
 
 		// display 2 greater Peak
 		List<Peak> peakList = getPeaks(POC);
+		
+		List<Peak> LpeakList = getPeaks(LPOC);
+		MatchingScore Lscore = getScore(LpeakList, p);
+		
+		System.out.println("Rotation (in degree)="+Lscore.getVertical_shift() * 180);
+		System.out.println("Scale ="+Math.pow(10, Lscore.getHorizontal_shift()));
 		return getScore(peakList, p);
 	}
 
